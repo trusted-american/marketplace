@@ -45,12 +45,14 @@ plugin-name/
 │   └── command-name.md
 ├── hooks/                      # Hook configuration
 │   └── hooks.json
+├── templates/                  # Output template files
+│   └── template-name.md
 ├── .mcp.json                   # MCP server config (optional)
 ├── README.md
 └── LICENSE
 ```
 
-> **Important:** Never put `commands/`, `agents/`, `skills/`, or `hooks/` inside `.claude-plugin/`. Only `plugin.json` goes there.
+> **Important:** Never put `commands/`, `agents/`, `skills/`, `hooks/`, or `templates/` inside `.claude-plugin/`. Only `plugin.json` goes there.
 
 ## Getting started
 
@@ -61,7 +63,7 @@ plugin-name/
 1. **Clone the repo:**
 
    ```bash
-   git clone https://github.com/taia-us/marketplace.git
+   git clone https://github.com/trusted-american/marketplace.git
    cd marketplace
    ```
 
@@ -113,7 +115,7 @@ This repo includes an MCP server at `tools/marketplace-mcp/` that auto-loads whe
 - **`validate_plugin`** — Check a single plugin for required files and valid manifest
 - **`validate_all`** — Validate every plugin in the marketplace
 - **`list_plugins`** — List all plugins with version, description, and components
-- **`add_component`** — Add a skill, agent, command, or hook to an existing plugin
+- **`add_component`** — Add a skill, agent, command, hook, or template to an existing plugin
 - **`get_conventions`** — View the full marketplace conventions and structure rules
 
 ## CI
