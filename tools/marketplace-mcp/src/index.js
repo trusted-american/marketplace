@@ -4,6 +4,12 @@ import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  listDirs,
+  fileExists,
+  generateRegistry,
+  writeRegistry,
+} from "../../lib/registry.js";
 
 // Resolve marketplace root (two levels up from src/)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,15 +36,6 @@ function pluginDir(category, name) {
   return resolved;
 }
 
-async function fileExists(p) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function readJsonSafe(p) {
   try {
     const data = await fs.readFile(p, "utf-8");
@@ -49,13 +46,11 @@ async function readJsonSafe(p) {
   }
 }
 
-async function listDirs(base) {
-  try {
-    const entries = await fs.readdir(base, { withFileTypes: true });
-    return entries.filter((d) => d.isDirectory()).map((d) => d.name);
-  } catch {
-    return [];
-  }
+async function regenerateMarketplaceJson() {
+  const { plugins, warnings } = await generateRegistry(PLUGINS_DIR, COMMUNITY_DIR);
+  for (const w of warnings) console.warn(`WARNING: ${w}`);
+  const { count } = await writeRegistry(path.join(MARKETPLACE_ROOT, "marketplace.json"), plugins);
+  return count;
 }
 
 async function validatePlugin(dir) {
@@ -92,7 +87,7 @@ async function validatePlugin(dir) {
 
   // Structural warnings
   const badDirs = [];
-  for (const d of ["commands", "agents", "skills", "hooks"]) {
+  for (const d of ["commands", "agents", "skills", "hooks", "templates"]) {
     if (await fileExists(path.join(dir, ".claude-plugin", d))) {
       badDirs.push(d);
     }
@@ -140,6 +135,32 @@ async function validatePlugin(dir) {
     }
   }
 
+  // Check templates structure
+  const templatesDir = path.join(dir, "templates");
+  if (await fileExists(templatesDir)) {
+    try {
+      const tplFiles = (await fs.readdir(templatesDir)).filter((f) => f.endsWith(".md"));
+      if (tplFiles.length === 0) {
+        warnings.push("templates/ directory exists but contains no .md files");
+      }
+    } catch (e) {
+      warnings.push(`templates/: could not read directory — ${e.message}`);
+    }
+  }
+
+  // Check hooks structure
+  const hooksDir = path.join(dir, "hooks");
+  if (await fileExists(hooksDir)) {
+    try {
+      const hookFiles = (await fs.readdir(hooksDir)).filter((f) => f.endsWith(".json"));
+      if (hookFiles.length === 0) {
+        warnings.push("hooks/ directory exists but contains no .json files");
+      }
+    } catch (e) {
+      warnings.push(`hooks/: could not read directory — ${e.message}`);
+    }
+  }
+
   return { name, errors, warnings, valid: errors.length === 0 };
 }
 
@@ -172,7 +193,7 @@ server.tool(
       .optional()
       .describe("Upstream repo URL (required for community plugins)"),
     components: z
-      .array(z.enum(["skills", "agents", "hooks", "commands"]))
+      .array(z.enum(["skills", "agents", "hooks", "commands", "templates"]))
       .optional()
       .describe("Component directories to create"),
     mcp: z.boolean().optional().describe("Include .mcp.json stub"),
@@ -262,6 +283,12 @@ server.tool(
               path.join(dir, "commands", "example.md"),
               `---\ndescription: Example command — replace with your own\n---\n\nDescribe what this command does.\n`
             );
+          } else if (comp === "templates") {
+            await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+            await fs.writeFile(
+              path.join(dir, "templates", "example.md"),
+              `---\nname: example\ndescription: Example template — replace with your own\n---\n\nDefine output template structure here.\n`
+            );
           }
         }
       }
@@ -285,16 +312,21 @@ server.tool(
               ? "hooks/hooks.json"
               : c === "agents"
                 ? "agents/example.md"
-                : "commands/example.md"
+                : c === "templates"
+                  ? "templates/example.md"
+                  : "commands/example.md"
         ),
         ...(mcp ? [".mcp.json"] : []),
       ];
+
+      // Regenerate marketplace.json
+      const total = await regenerateMarketplaceJson();
 
       return {
         content: [
           {
             type: "text",
-            text: `Created plugin '${name}' at ${dir}\n\nFiles:\n${created.map((f) => `  ${f}`).join("\n")}`,
+            text: `Created plugin '${name}' at ${dir}\n\nFiles:\n${created.map((f) => `  ${f}`).join("\n")}\n\nmarketplace.json updated (${total} plugin(s) indexed)`,
           },
         ],
       };
@@ -425,7 +457,7 @@ server.tool(
         }
 
         const components = [];
-        const checks = ["skills", "agents", "commands", "hooks", ".mcp.json"];
+        const checks = ["skills", "agents", "commands", "hooks", "templates", ".mcp.json"];
         for (const c of checks) {
           if (await fileExists(path.join(dir, c))) {
             components.push(c === ".mcp.json" ? "mcp" : c);
@@ -462,7 +494,7 @@ server.tool(
 
 server.tool(
   "add_component",
-  "Add a skill, agent, command, or hook to an existing plugin",
+  "Add a skill, agent, command, hook, or template to an existing plugin",
   {
     plugin: z
       .string()
@@ -473,7 +505,7 @@ server.tool(
       .default("plugins")
       .describe("Which directory the plugin is in"),
     component: z
-      .enum(["skill", "agent", "command", "hook"])
+      .enum(["skill", "agent", "command", "hook", "template"])
       .describe("Component type to add"),
     name: z
       .string()
@@ -546,13 +578,23 @@ server.tool(
       }
       await fs.writeFile(hooksFile, JSON.stringify(config, null, 2) + "\n");
       created = `hooks/hooks.json (added '${name}' event)`;
+    } else if (component === "template") {
+      await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+      await fs.writeFile(
+        path.join(dir, "templates", `${name}.md`),
+        `---\nname: ${name}\ndescription: ${description}\n---\n\n${description}\n`
+      );
+      created = `templates/${name}.md`;
     }
+
+    // Regenerate marketplace.json
+    await regenerateMarketplaceJson();
 
     return {
       content: [
         {
           type: "text",
-          text: `Added ${component} '${name}' to ${category}/${plugin}\n  → ${created}`,
+          text: `Added ${component} '${name}' to ${category}/${plugin}\n  → ${created}\n  marketplace.json updated`,
         },
       ],
     };
@@ -597,6 +639,8 @@ plugin-name/
 │   └── command-name.md
 ├── hooks/                   ← Hook configuration
 │   └── hooks.json
+├── templates/               ← Output template files
+│   └── template-name.md
 ├── .mcp.json                ← MCP server config (optional)
 ├── .lsp.json                ← LSP server config (optional)
 ├── settings.json            ← Default settings (optional)
@@ -605,7 +649,7 @@ plugin-name/
 \`\`\`
 
 ## Key rules
-- NEVER put commands/, agents/, skills/, hooks/ inside .claude-plugin/
+- NEVER put commands/, agents/, skills/, hooks/, templates/ inside .claude-plugin/
 - Only plugin.json goes inside .claude-plugin/
 - Skills must be directories containing SKILL.md (not loose .md files)
 - Agents are .md files with frontmatter (name, description, model)

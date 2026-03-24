@@ -13,6 +13,7 @@ Multi-agent Playwright test generation system that creates thorough, production-
 | Agent | `flakiness-reviewer` | Audits for flakiness, concurrency issues, and independence |
 | Agent | `final-reviewer` | Implements fixes and certifies production readiness (80+ score) |
 | Skill | `playwright-testing` | Best practices for selectors, waits, mocking, and assertions |
+| Template | `spec-file` | Output template for generated Playwright spec files |
 
 ## Usage
 
