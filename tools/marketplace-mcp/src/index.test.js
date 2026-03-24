@@ -3,10 +3,15 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
-// We test the helpers and tool logic by importing and exercising them against
-// a temporary directory. Since index.js is an MCP server that connects on
-// import, we re-implement the pure helpers here and test them directly, then
-// also test the tool handlers via a lightweight harness.
+// Import shared registry functions directly — these are the production code paths
+import {
+  listDirs,
+  fileExists,
+  collectComponents,
+  generateRegistry,
+  writeRegistry,
+  COMPONENT_TYPES,
+} from "../../lib/registry.js";
 
 let tmpDir;
 let pluginsDir;
@@ -24,7 +29,7 @@ afterEach(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
 });
 
-// ── Re-implement helpers for testability ─────────────────────────────────────
+// ── MCP-specific helpers (not in shared module) ──────────────────────────────
 
 const KEBAB_CASE = /^[a-z0-9-]+$/;
 
@@ -37,15 +42,6 @@ function pluginDir(category, name) {
   return resolved;
 }
 
-async function fileExists(p) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function readJsonSafe(p) {
   try {
     const data = await fs.readFile(p, "utf-8");
@@ -53,15 +49,6 @@ async function readJsonSafe(p) {
   } catch (e) {
     if (e.code === "ENOENT") return null;
     throw e;
-  }
-}
-
-async function listDirs(base) {
-  try {
-    const entries = await fs.readdir(base, { withFileTypes: true });
-    return entries.filter((d) => d.isDirectory()).map((d) => d.name);
-  } catch {
-    return [];
   }
 }
 
@@ -77,7 +64,265 @@ async function createValidPlugin(dir, name, opts = {}) {
   return pluginPath;
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// ── Shared module: listDirs ──────────────────────────────────────────────────
+
+describe("listDirs", () => {
+  it("returns directory names", async () => {
+    await fs.mkdir(path.join(tmpDir, "dir-a"));
+    await fs.mkdir(path.join(tmpDir, "dir-b"));
+    await fs.writeFile(path.join(tmpDir, "file.txt"), "");
+    const dirs = await listDirs(tmpDir);
+    expect(dirs).toContain("dir-a");
+    expect(dirs).toContain("dir-b");
+    expect(dirs).not.toContain("file.txt");
+  });
+
+  it("returns empty array for non-existing directory", async () => {
+    expect(await listDirs(path.join(tmpDir, "nope"))).toEqual([]);
+  });
+});
+
+// ── Shared module: fileExists ────────────────────────────────────────────────
+
+describe("fileExists", () => {
+  it("returns true for existing file", async () => {
+    const f = path.join(tmpDir, "exists.txt");
+    await fs.writeFile(f, "hello");
+    expect(await fileExists(f)).toBe(true);
+  });
+
+  it("returns false for non-existing file", async () => {
+    expect(await fileExists(path.join(tmpDir, "nope.txt"))).toBe(false);
+  });
+});
+
+// ── Shared module: collectComponents ─────────────────────────────────────────
+
+describe("collectComponents", () => {
+  it("detects skills as directories", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-test");
+    await fs.mkdir(path.join(dir, "skills", "my-skill"), { recursive: true });
+    await fs.writeFile(path.join(dir, "skills", "my-skill", "SKILL.md"), "# Skill\n");
+    const components = await collectComponents(dir);
+    expect(components.skills).toEqual(["my-skill"]);
+  });
+
+  it("detects agents as .md files", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-test2");
+    await fs.mkdir(path.join(dir, "agents"), { recursive: true });
+    await fs.writeFile(path.join(dir, "agents", "reviewer.md"), "---\nname: reviewer\n---\n");
+    const components = await collectComponents(dir);
+    expect(components.agents).toEqual(["reviewer"]);
+  });
+
+  it("detects commands as .md files", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-test3");
+    await fs.mkdir(path.join(dir, "commands"), { recursive: true });
+    await fs.writeFile(path.join(dir, "commands", "deploy.md"), "---\ndescription: Deploy\n---\n");
+    const components = await collectComponents(dir);
+    expect(components.commands).toEqual(["deploy"]);
+  });
+
+  it("detects hooks as .json files", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-test4");
+    await fs.mkdir(path.join(dir, "hooks"), { recursive: true });
+    await fs.writeFile(path.join(dir, "hooks", "hooks.json"), '{"hooks":{}}');
+    const components = await collectComponents(dir);
+    expect(components.hooks).toEqual(["hooks.json"]);
+  });
+
+  it("detects templates as .md files", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-test5");
+    await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+    await fs.writeFile(path.join(dir, "templates", "spec-file.md"), "---\nname: spec-file\n---\n");
+    const components = await collectComponents(dir);
+    expect(components.templates).toEqual(["spec-file"]);
+  });
+
+  it("strips .md extension from agents, commands, templates", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-strip");
+    await fs.mkdir(path.join(dir, "agents"), { recursive: true });
+    await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+    await fs.writeFile(path.join(dir, "agents", "test-agent.md"), "");
+    await fs.writeFile(path.join(dir, "templates", "test-template.md"), "");
+    const components = await collectComponents(dir);
+    expect(components.agents).toEqual(["test-agent"]);
+    expect(components.templates).toEqual(["test-template"]);
+  });
+
+  it("omits empty component directories", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-empty");
+    await fs.mkdir(path.join(dir, "agents"), { recursive: true });
+    await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+    // Empty dirs — no files inside
+    const components = await collectComponents(dir);
+    expect(components.agents).toBeUndefined();
+    expect(components.templates).toBeUndefined();
+  });
+
+  it("ignores non-.md files in agents/commands/templates", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-ignore");
+    await fs.mkdir(path.join(dir, "agents"), { recursive: true });
+    await fs.writeFile(path.join(dir, "agents", "notes.txt"), "not an agent");
+    const components = await collectComponents(dir);
+    expect(components.agents).toBeUndefined();
+  });
+
+  it("returns all five component types when present", async () => {
+    const dir = await createValidPlugin(pluginsDir, "comp-all");
+    await fs.mkdir(path.join(dir, "skills", "s1"), { recursive: true });
+    await fs.writeFile(path.join(dir, "skills", "s1", "SKILL.md"), "");
+    await fs.mkdir(path.join(dir, "agents"), { recursive: true });
+    await fs.writeFile(path.join(dir, "agents", "a1.md"), "");
+    await fs.mkdir(path.join(dir, "commands"), { recursive: true });
+    await fs.writeFile(path.join(dir, "commands", "c1.md"), "");
+    await fs.mkdir(path.join(dir, "hooks"), { recursive: true });
+    await fs.writeFile(path.join(dir, "hooks", "hooks.json"), "{}");
+    await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+    await fs.writeFile(path.join(dir, "templates", "t1.md"), "");
+    const components = await collectComponents(dir);
+    expect(Object.keys(components).sort()).toEqual(
+      ["agents", "commands", "hooks", "skills", "templates"]
+    );
+  });
+});
+
+// ── Shared module: generateRegistry ──────────────────────────────────────────
+
+describe("generateRegistry", () => {
+  it("returns empty plugins for empty marketplace", async () => {
+    const { plugins, warnings } = await generateRegistry(pluginsDir, communityDir);
+    expect(Object.keys(plugins)).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
+  });
+
+  it("collects a single valid plugin", async () => {
+    await createValidPlugin(pluginsDir, "test-plugin");
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(plugins["test-plugin"]).toBeDefined();
+    expect(plugins["test-plugin"].category).toBe("plugins");
+    expect(plugins["test-plugin"].path).toBe("plugins/test-plugin");
+  });
+
+  it("collects plugins from both categories", async () => {
+    await createValidPlugin(pluginsDir, "first-party");
+    await createValidPlugin(communityDir, "third-party", { repository: "https://example.com" });
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(plugins["first-party"].category).toBe("plugins");
+    expect(plugins["third-party"].category).toBe("community");
+  });
+
+  it("skips plugins without valid manifest", async () => {
+    const dir = path.join(pluginsDir, "broken");
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, "README.md"), "# broken\n");
+    // No .claude-plugin/plugin.json
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(Object.keys(plugins)).toHaveLength(0);
+  });
+
+  it("skips plugins with missing name field", async () => {
+    const dir = path.join(pluginsDir, "no-name");
+    await fs.mkdir(path.join(dir, ".claude-plugin"), { recursive: true });
+    await fs.writeFile(
+      path.join(dir, ".claude-plugin", "plugin.json"),
+      JSON.stringify({ description: "no name" })
+    );
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(Object.keys(plugins)).toHaveLength(0);
+  });
+
+  it("detects duplicate plugin names and warns", async () => {
+    await createValidPlugin(pluginsDir, "dupe-plugin", { name: "same-name" });
+    await createValidPlugin(communityDir, "other-dir", { name: "same-name" });
+    const { plugins, warnings } = await generateRegistry(pluginsDir, communityDir);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('Duplicate plugin name "same-name"');
+    // Second one wins
+    expect(plugins["same-name"].category).toBe("community");
+  });
+
+  it("includes author, license, keywords, repository from manifest", async () => {
+    await createValidPlugin(pluginsDir, "rich-plugin", {
+      author: { name: "Test Author" },
+      license: "MIT",
+      keywords: ["test", "plugin"],
+      repository: "https://github.com/test/repo",
+    });
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    const p = plugins["rich-plugin"];
+    expect(p.author).toBe("Test Author");
+    expect(p.license).toBe("MIT");
+    expect(p.keywords).toEqual(["test", "plugin"]);
+    expect(p.repository).toBe("https://github.com/test/repo");
+  });
+
+  it("includes components in registry entry", async () => {
+    const dir = await createValidPlugin(pluginsDir, "full-plugin");
+    await fs.mkdir(path.join(dir, "templates"), { recursive: true });
+    await fs.writeFile(path.join(dir, "templates", "output.md"), "");
+    await fs.mkdir(path.join(dir, "skills", "my-skill"), { recursive: true });
+    await fs.writeFile(path.join(dir, "skills", "my-skill", "SKILL.md"), "");
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(plugins["full-plugin"].components.templates).toEqual(["output"]);
+    expect(plugins["full-plugin"].components.skills).toEqual(["my-skill"]);
+  });
+});
+
+// ── Shared module: writeRegistry ─────────────────────────────────────────────
+
+describe("writeRegistry", () => {
+  it("writes valid JSON to output path", async () => {
+    const output = path.join(tmpDir, "marketplace.json");
+    await writeRegistry(output, {});
+    const data = JSON.parse(await fs.readFile(output, "utf-8"));
+    expect(data.version).toBe("1.0.0");
+    expect(data.plugins).toEqual({});
+    expect(data.generated).toBeDefined();
+  });
+
+  it("preserves timestamp when plugins unchanged", async () => {
+    const output = path.join(tmpDir, "marketplace.json");
+    const plugins = { test: { name: "test" } };
+
+    // First write
+    await writeRegistry(output, plugins);
+    const first = JSON.parse(await fs.readFile(output, "utf-8"));
+
+    // Second write with same data — timestamp should not change
+    await writeRegistry(output, plugins);
+    const second = JSON.parse(await fs.readFile(output, "utf-8"));
+
+    expect(second.generated).toBe(first.generated);
+  });
+
+  it("updates timestamp when plugins change", async () => {
+    const output = path.join(tmpDir, "marketplace.json");
+
+    await writeRegistry(output, { a: { name: "a" } });
+    const first = JSON.parse(await fs.readFile(output, "utf-8"));
+
+    // Small delay to ensure different timestamp
+    await new Promise((r) => setTimeout(r, 10));
+
+    await writeRegistry(output, { b: { name: "b" } });
+    const second = JSON.parse(await fs.readFile(output, "utf-8"));
+
+    expect(second.generated).not.toBe(first.generated);
+  });
+
+  it("returns count and changed flag", async () => {
+    const output = path.join(tmpDir, "marketplace.json");
+    const result1 = await writeRegistry(output, { a: { name: "a" } });
+    expect(result1.count).toBe(1);
+    expect(result1.changed).toBe(true);
+
+    const result2 = await writeRegistry(output, { a: { name: "a" } });
+    expect(result2.changed).toBe(false);
+  });
+});
+
+// ── MCP-specific: pluginDir ──────────────────────────────────────────────────
 
 describe("pluginDir", () => {
   it("resolves plugins category correctly", () => {
@@ -103,17 +348,7 @@ describe("pluginDir", () => {
   });
 });
 
-describe("fileExists", () => {
-  it("returns true for existing file", async () => {
-    const f = path.join(tmpDir, "exists.txt");
-    await fs.writeFile(f, "hello");
-    expect(await fileExists(f)).toBe(true);
-  });
-
-  it("returns false for non-existing file", async () => {
-    expect(await fileExists(path.join(tmpDir, "nope.txt"))).toBe(false);
-  });
-});
+// ── MCP-specific: readJsonSafe ───────────────────────────────────────────────
 
 describe("readJsonSafe", () => {
   it("returns parsed JSON for valid file", async () => {
@@ -133,21 +368,7 @@ describe("readJsonSafe", () => {
   });
 });
 
-describe("listDirs", () => {
-  it("returns directory names", async () => {
-    await fs.mkdir(path.join(tmpDir, "dir-a"));
-    await fs.mkdir(path.join(tmpDir, "dir-b"));
-    await fs.writeFile(path.join(tmpDir, "file.txt"), "");
-    const dirs = await listDirs(tmpDir);
-    expect(dirs).toContain("dir-a");
-    expect(dirs).toContain("dir-b");
-    expect(dirs).not.toContain("file.txt");
-  });
-
-  it("returns empty array for non-existing directory", async () => {
-    expect(await listDirs(path.join(tmpDir, "nope"))).toEqual([]);
-  });
-});
+// ── KEBAB_CASE validation ────────────────────────────────────────────────────
 
 describe("KEBAB_CASE validation", () => {
   it("accepts valid kebab-case", () => {
@@ -165,12 +386,13 @@ describe("KEBAB_CASE validation", () => {
   });
 });
 
+// ── Plugin validation ────────────────────────────────────────────────────────
+
 describe("plugin validation", () => {
   it("validates a complete plugin as passing", async () => {
     const dir = await createValidPlugin(pluginsDir, "good-plugin");
     const REQUIRED_FILES = ["README.md", "LICENSE", ".claude-plugin"];
 
-    // Inline validation logic
     const errors = [];
     for (const file of REQUIRED_FILES) {
       const target =
@@ -237,6 +459,12 @@ describe("plugin validation", () => {
     expect(await fileExists(path.join(dir, ".claude-plugin", "commands"))).toBe(true);
   });
 
+  it("detects templates inside .claude-plugin/", async () => {
+    const dir = await createValidPlugin(pluginsDir, "bad-templates");
+    await fs.mkdir(path.join(dir, ".claude-plugin", "templates"), { recursive: true });
+    expect(await fileExists(path.join(dir, ".claude-plugin", "templates"))).toBe(true);
+  });
+
   it("detects skills directory missing SKILL.md", async () => {
     const dir = await createValidPlugin(pluginsDir, "bad-skill");
     await fs.mkdir(path.join(dir, "skills", "my-skill"), { recursive: true });
@@ -251,6 +479,8 @@ describe("plugin validation", () => {
   });
 });
 
+// ── Plugin creation safety ───────────────────────────────────────────────────
+
 describe("plugin creation safety", () => {
   it("does not allow creating over existing plugin", async () => {
     const dir = await createValidPlugin(pluginsDir, "existing");
@@ -258,18 +488,17 @@ describe("plugin creation safety", () => {
   });
 
   it("upstream is required for community plugins", () => {
-    // The tool should reject community plugins without upstream
-    // This is enforced at the tool handler level
     const category = "community";
     const upstream = undefined;
     expect(category === "community" && !upstream).toBe(true);
   });
 });
 
+// ── Hook security ────────────────────────────────────────────────────────────
+
 describe("hook security", () => {
   it("does not interpolate description into shell commands", () => {
     const description = '"; rm -rf / #';
-    // The fixed hook uses type: "prompt" instead of type: "command"
     const hookEntry = {
       hooks: [
         {
@@ -278,11 +507,12 @@ describe("hook security", () => {
         },
       ],
     };
-    // Verify no shell command is generated
     expect(JSON.stringify(hookEntry)).not.toContain("echo");
     expect(hookEntry.hooks[0].type).toBe("prompt");
   });
 });
+
+// ── Component listing ────────────────────────────────────────────────────────
 
 describe("component listing", () => {
   it("lists plugins from directory", async () => {
@@ -313,6 +543,8 @@ describe("component listing", () => {
   });
 });
 
+// ── add_component validation ─────────────────────────────────────────────────
+
 describe("add_component validation", () => {
   it("rejects plugin names with path traversal", () => {
     expect(KEBAB_CASE.test("../../etc")).toBe(false);
@@ -325,5 +557,13 @@ describe("add_component validation", () => {
   it("accepts valid component names", () => {
     expect(KEBAB_CASE.test("my-skill")).toBe(true);
     expect(KEBAB_CASE.test("auth-hook")).toBe(true);
+  });
+});
+
+// ── COMPONENT_TYPES constant ─────────────────────────────────────────────────
+
+describe("COMPONENT_TYPES", () => {
+  it("includes all five component types", () => {
+    expect(COMPONENT_TYPES).toEqual(["skills", "agents", "commands", "hooks", "templates"]);
   });
 });

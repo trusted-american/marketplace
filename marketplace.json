@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-03-24T22:02:24.552Z",
+  "repository": "https://github.com/trusted-american/marketplace",
+  "plugins": {
+    "playwright": {
+      "name": "playwright",
+      "version": "0.1.0",
+      "description": "Multi-agent Playwright test generation system that creates thorough, production-ready test suites one page at a time",
+      "category": "plugins",
+      "path": "plugins/playwright",
+      "components": {
+        "skills": [
+          "playwright-testing"
+        ],
+        "agents": [
+          "final-reviewer",
+          "flakiness-reviewer",
+          "frequency-reviewer",
+          "test-discoverer",
+          "test-writer"
+        ],
+        "commands": [
+          "create-tests"
+        ],
+        "templates": [
+          "spec-file"
+        ]
+      },
+      "author": "Trusted American Insurance Agency",
+      "license": "MIT",
+      "keywords": [
+        "playwright",
+        "testing",
+        "e2e",
+        "test-generation",
+        "quality-assurance"
+      ]
+    }
+  }
+}
