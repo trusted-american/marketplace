@@ -69,5 +69,5 @@ Add any project-specific context below the frontmatter (authentication flows, AP
 ## Install
 
 ```bash
-claude plugin install playwright@marketplace
+claude plugin install https://github.com/trusted-american/marketplace.git/plugins/playwright
 ```

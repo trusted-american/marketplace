@@ -8,11 +8,12 @@ Plugin registry for Claude Code, maintained by [Trusted American Insurance Agenc
 marketplace/
 ├── plugins/                    # First-party plugins
 ├── community/                  # Third-party forks and adaptations
+├── .claude/
+│   └── marketplace.json        # Auto-generated plugin index (do not edit)
 ├── tools/
 │   ├── lib/registry.js         # Shared registry generation logic
 │   ├── generate-marketplace-json.js  # CLI script to regenerate marketplace.json
 │   └── marketplace-mcp/        # MCP server for plugin management
-├── marketplace.json            # Auto-generated plugin index (do not edit)
 ├── .github/workflows/ci.yml    # Validation + registry generation
 └── .mcp.json                   # Auto-loads the MCP server in Claude Code
 ```
@@ -65,20 +66,18 @@ The `name` field is required and must be kebab-case (`^[a-z0-9-]+$`). All other 
 }
 ```
 
-Names must be unique across the entire marketplace. If two plugins share a `name`, CI will warn and the second one overwrites the first in `marketplace.json`.
+Names must be unique across the entire marketplace. If two plugins share a `name`, CI will warn and the second one overwrites the first in `.claude/marketplace.json`.
 
 ## How marketplace.json works
 
-`marketplace.json` is a generated index of all plugins. It is **not** updated in PRs. The flow:
+`.claude/marketplace.json` is a generated index of all plugins. It is **not** updated in PRs. The flow:
 
 1. A PR adds or modifies plugins and passes CI validation.
 2. The PR merges to `main`.
-3. CI runs `node tools/generate-marketplace-json.js`, which scans `plugins/` and `community/`, reads each `plugin.json`, collects component directories, and writes `marketplace.json`.
-4. If the plugin data changed, CI commits the updated file to `main` with `[skip ci]` to avoid a loop.
+3. CI runs `node tools/generate-marketplace-json.js`, which scans `plugins/` and `community/`, reads each `plugin.json`, collects component directories, and writes `.claude/marketplace.json`.
+4. CI commits the updated file to `main` with `[skip ci]` to avoid a loop.
 
-The `generated` timestamp only updates when plugin data actually changes, not on every run.
-
-The generation logic lives in `tools/lib/registry.js` and is shared between the CLI script and the MCP server.
+The `lastUpdated` timestamp updates on every run. The generation logic lives in `tools/lib/registry.js` and is shared between the CLI script and the MCP server.
 
 ## MCP server
 
@@ -100,11 +99,11 @@ Validation checks: required files exist, `plugin.json` is valid JSON with a keba
 Every push and PR runs two jobs:
 
 1. **Validate plugins** — Shell script checks every directory in `plugins/` and `community/` for `README.md`, `LICENSE`, and a valid `.claude-plugin/plugin.json` with a kebab-case `name`.
-2. **Test MCP server** — Runs `npm test` in `tools/marketplace-mcp/` (vitest, 56 tests covering validation, registry generation, component handling, and security).
+2. **Test MCP server** — Runs `npm test` in `tools/marketplace-mcp/` (vitest, 57 tests covering validation, registry generation, component handling, and security).
 
 On merge to `main`, a third job runs:
 
-3. **Update registry** — Regenerates `marketplace.json` and commits if changed.
+3. **Update registry** — Regenerates `.claude/marketplace.json` and commits it.
 
 ## Setup
 
@@ -132,10 +131,10 @@ The first Atlassian tool call opens a browser for OAuth. Run `getAccessibleAtlas
 
 ## Installing plugins
 
-From the marketplace:
+From this marketplace via HTTPS:
 
 ```bash
-claude plugin install <plugin-name>@marketplace
+claude plugin install https://github.com/trusted-american/marketplace.git/plugins/<plugin-name>
 ```
 
 For local development:

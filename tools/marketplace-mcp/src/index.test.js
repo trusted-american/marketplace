@@ -273,52 +273,49 @@ describe("generateRegistry", () => {
 
 describe("writeRegistry", () => {
   it("writes valid JSON to output path", async () => {
-    const output = path.join(tmpDir, "marketplace.json");
+    const output = path.join(tmpDir, ".claude", "marketplace.json");
     await writeRegistry(output, {});
     const data = JSON.parse(await fs.readFile(output, "utf-8"));
     expect(data.version).toBe("1.0.0");
     expect(data.plugins).toEqual({});
-    expect(data.generated).toBeDefined();
+    expect(data.lastUpdated).toBeDefined();
   });
 
-  it("preserves timestamp when plugins unchanged", async () => {
-    const output = path.join(tmpDir, "marketplace.json");
+  it("creates parent directory if missing", async () => {
+    const output = path.join(tmpDir, "nested", "dir", "marketplace.json");
+    await writeRegistry(output, {});
+    const data = JSON.parse(await fs.readFile(output, "utf-8"));
+    expect(data.version).toBe("1.0.0");
+  });
+
+  it("updates timestamp on every run", async () => {
+    const output = path.join(tmpDir, ".claude", "marketplace.json");
     const plugins = { test: { name: "test" } };
 
-    // First write
     await writeRegistry(output, plugins);
     const first = JSON.parse(await fs.readFile(output, "utf-8"));
 
-    // Second write with same data — timestamp should not change
-    await writeRegistry(output, plugins);
-    const second = JSON.parse(await fs.readFile(output, "utf-8"));
-
-    expect(second.generated).toBe(first.generated);
-  });
-
-  it("updates timestamp when plugins change", async () => {
-    const output = path.join(tmpDir, "marketplace.json");
-
-    await writeRegistry(output, { a: { name: "a" } });
-    const first = JSON.parse(await fs.readFile(output, "utf-8"));
-
-    // Small delay to ensure different timestamp
     await new Promise((r) => setTimeout(r, 10));
 
-    await writeRegistry(output, { b: { name: "b" } });
+    await writeRegistry(output, plugins);
     const second = JSON.parse(await fs.readFile(output, "utf-8"));
 
-    expect(second.generated).not.toBe(first.generated);
+    expect(second.lastUpdated).not.toBe(first.lastUpdated);
   });
 
-  it("returns count and changed flag", async () => {
-    const output = path.join(tmpDir, "marketplace.json");
-    const result1 = await writeRegistry(output, { a: { name: "a" } });
-    expect(result1.count).toBe(1);
-    expect(result1.changed).toBe(true);
+  it("returns plugin count", async () => {
+    const output = path.join(tmpDir, ".claude", "marketplace.json");
+    const result = await writeRegistry(output, { a: { name: "a" } });
+    expect(result.count).toBe(1);
+  });
 
-    const result2 = await writeRegistry(output, { a: { name: "a" } });
-    expect(result2.changed).toBe(false);
+  it("puts lastUpdated as the last field in JSON", async () => {
+    const output = path.join(tmpDir, ".claude", "marketplace.json");
+    await writeRegistry(output, { test: { name: "test" } });
+    const raw = await fs.readFile(output, "utf-8");
+    const lines = raw.trim().split("\n");
+    // lastUpdated should be the last key before the closing brace
+    expect(lines[lines.length - 2]).toMatch(/"lastUpdated"/);
   });
 });
 

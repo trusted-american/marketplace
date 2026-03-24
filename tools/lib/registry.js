@@ -103,29 +103,20 @@ export async function generateRegistry(pluginsDir, communityDir) {
 }
 
 /**
- * Write marketplace.json. Only updates the timestamp if plugin data changed.
+ * Write .claude/marketplace.json.
+ * Timestamp updates on every run so CI always produces a fresh commit.
  */
 export async function writeRegistry(outputPath, plugins) {
-  let existing = null;
-  try {
-    existing = JSON.parse(await fs.readFile(outputPath, "utf-8"));
-  } catch {
-    // No existing file or invalid JSON
-  }
-
-  const existingPlugins = JSON.stringify(existing?.plugins || null);
-  const newPlugins = JSON.stringify(plugins);
-  const changed = existingPlugins !== newPlugins;
+  // Ensure parent directory exists
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
 
   const registry = {
     version: "1.0.0",
-    generated: changed
-      ? new Date().toISOString()
-      : (existing?.generated || new Date().toISOString()),
     repository: "https://github.com/trusted-american/marketplace",
     plugins,
+    lastUpdated: new Date().toISOString(),
   };
 
   await fs.writeFile(outputPath, JSON.stringify(registry, null, 2) + "\n");
-  return { count: Object.keys(plugins).length, changed };
+  return { count: Object.keys(plugins).length };
 }
