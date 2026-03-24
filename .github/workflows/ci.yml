@@ -12,15 +12,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
 
       - name: Check required files
         run: |
           exit_code=0
 
-          for dir in plugins/*/ community/*/; do
+          for dir in plugins/*/; do
             [ -d "$dir" ] || continue
-            # skip claude (submodule)
-            [[ "$dir" == "community/claude/" ]] && continue
             plugin_ok=0
 
             for file in README.md LICENSE; do
@@ -30,6 +30,27 @@ jobs:
                 plugin_ok=1
               fi
             done
+
+            manifest="${dir}.claude-plugin/plugin.json"
+            if [ ! -f "$manifest" ]; then
+              echo "MISSING: $manifest"
+              exit_code=1
+              plugin_ok=1
+            else
+              if ! python3 -c "import json, sys, re; d=json.load(open(sys.argv[1])); n=d.get('name',''); assert n and re.match(r'^[a-z0-9-]+$', n), 'name must be kebab-case'" "$manifest" 2>/dev/null; then
+                echo "INVALID: $manifest (missing or non-kebab-case 'name' field)"
+                exit_code=1
+                plugin_ok=1
+              fi
+            fi
+
+            [ $plugin_ok -eq 0 ] && echo "OK: $dir"
+          done
+
+          # Validate community submodule plugins
+          for dir in community/*/plugins/*/; do
+            [ -d "$dir" ] || continue
+            plugin_ok=0
 
             manifest="${dir}.claude-plugin/plugin.json"
             if [ ! -f "$manifest" ]; then
@@ -76,6 +97,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -120,6 +143,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -137,10 +162,10 @@ jobs:
 
           BRANCH="chore/update-marketplace-json-$(date +%s)"
           git checkout -b "$BRANCH"
-          git commit -m "chore: update marketplace.json"
+          git commit -m "chore: update marketplace.json [skip ci]"
           git push -u origin "$BRANCH"
           gh pr create \
-            --title "chore: update marketplace.json" \
+            --title "chore: update marketplace.json [skip ci]" \
             --body "Auto-generated registry update from CI." \
             --base main \
             --head "$BRANCH"

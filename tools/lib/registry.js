@@ -85,9 +85,27 @@ export async function generateRegistry(pluginsDir, communityDir) {
   const plugins = {};
   const warnings = [];
 
-  for (const [category, base] of [["plugins", pluginsDir], ["community", communityDir]]) {
-    for (const name of await listDirs(base)) {
-      const entry = await collectPlugin(category, name, base);
+  // Scan top-level plugins/
+  for (const name of await listDirs(pluginsDir)) {
+    const entry = await collectPlugin("plugins", name, pluginsDir);
+    if (!entry) continue;
+
+    if (plugins[entry.name]) {
+      warnings.push(
+        `Duplicate plugin name "${entry.name}": ${plugins[entry.name].path} and ${entry.path}`
+      );
+    }
+    plugins[entry.name] = entry;
+  }
+
+  // Scan community/ — each subdirectory is a submodule repo that may contain a plugins/ folder
+  for (const repo of await listDirs(communityDir)) {
+    const repoPluginsDir = path.join(communityDir, repo, "plugins");
+    if (!(await fileExists(repoPluginsDir))) continue;
+
+    for (const name of await listDirs(repoPluginsDir)) {
+      const categoryPath = `community/${repo}/plugins`;
+      const entry = await collectPlugin(categoryPath, name, repoPluginsDir);
       if (!entry) continue;
 
       if (plugins[entry.name]) {

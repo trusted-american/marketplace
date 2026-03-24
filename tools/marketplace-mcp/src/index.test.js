@@ -64,6 +64,12 @@ async function createValidPlugin(dir, name, opts = {}) {
   return pluginPath;
 }
 
+// Create a plugin inside a community submodule repo (community/<repo>/plugins/<name>/)
+async function createCommunityPlugin(communityBase, repo, name, opts = {}) {
+  const repoPluginsDir = path.join(communityBase, repo, "plugins");
+  return createValidPlugin(repoPluginsDir, name, opts);
+}
+
 // ── Shared module: listDirs ──────────────────────────────────────────────────
 
 describe("listDirs", () => {
@@ -206,10 +212,11 @@ describe("generateRegistry", () => {
 
   it("collects plugins from both categories", async () => {
     await createValidPlugin(pluginsDir, "first-party");
-    await createValidPlugin(communityDir, "third-party", { repository: "https://example.com" });
+    await createCommunityPlugin(communityDir, "upstream-repo", "third-party", { repository: "https://example.com" });
     const { plugins } = await generateRegistry(pluginsDir, communityDir);
     expect(plugins["first-party"].category).toBe("plugins");
-    expect(plugins["third-party"].category).toBe("community");
+    expect(plugins["third-party"].category).toBe("community/upstream-repo/plugins");
+    expect(plugins["third-party"].path).toBe("community/upstream-repo/plugins/third-party");
   });
 
   it("skips plugins without valid manifest", async () => {
@@ -234,12 +241,12 @@ describe("generateRegistry", () => {
 
   it("detects duplicate plugin names and warns", async () => {
     await createValidPlugin(pluginsDir, "dupe-plugin", { name: "same-name" });
-    await createValidPlugin(communityDir, "other-dir", { name: "same-name" });
+    await createCommunityPlugin(communityDir, "upstream-repo", "other-dir", { name: "same-name" });
     const { plugins, warnings } = await generateRegistry(pluginsDir, communityDir);
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('Duplicate plugin name "same-name"');
     // Second one wins
-    expect(plugins["same-name"].category).toBe("community");
+    expect(plugins["same-name"].category).toBe("community/upstream-repo/plugins");
   });
 
   it("includes author, license, keywords, repository from manifest", async () => {
@@ -255,6 +262,41 @@ describe("generateRegistry", () => {
     expect(p.license).toBe("MIT");
     expect(p.keywords).toEqual(["test", "plugin"]);
     expect(p.repository).toBe("https://github.com/test/repo");
+  });
+
+  it("scans multiple repos inside community/", async () => {
+    await createCommunityPlugin(communityDir, "repo-a", "plugin-x");
+    await createCommunityPlugin(communityDir, "repo-b", "plugin-y");
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(plugins["plugin-x"]).toBeDefined();
+    expect(plugins["plugin-y"]).toBeDefined();
+    expect(plugins["plugin-x"].path).toBe("community/repo-a/plugins/plugin-x");
+    expect(plugins["plugin-y"].path).toBe("community/repo-b/plugins/plugin-y");
+  });
+
+  it("ignores community repos without a plugins/ subdirectory", async () => {
+    // Create a repo dir without plugins/
+    await fs.mkdir(path.join(communityDir, "empty-repo"), { recursive: true });
+    await fs.writeFile(path.join(communityDir, "empty-repo", "README.md"), "# Empty\n");
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(Object.keys(plugins)).toHaveLength(0);
+  });
+
+  it("generates correct source path for community plugins in writeRegistry", async () => {
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
+    const plugins = {
+      "my-community-plugin": {
+        name: "my-community-plugin",
+        version: "1.0.0",
+        description: "A community plugin",
+        category: "community/claude/plugins",
+        path: "community/claude/plugins/my-community-plugin",
+        components: {},
+      },
+    };
+    await writeRegistry(output, plugins);
+    const data = JSON.parse(await fs.readFile(output, "utf-8"));
+    expect(data.plugins[0].source).toBe("./community/claude/plugins/my-community-plugin");
   });
 
   it("includes components in registry entry", async () => {
