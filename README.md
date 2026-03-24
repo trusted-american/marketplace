@@ -54,6 +54,45 @@ plugin-name/
 
 ## Getting started
 
+### Team setup
+
+**Prerequisites:** [Claude Code](https://claude.ai/code) installed and authenticated. Node.js 18+ (22 recommended to match CI).
+
+1. **Clone the repo:**
+
+   ```bash
+   git clone https://github.com/taia-us/marketplace.git
+   cd marketplace
+   ```
+
+2. **Install MCP server dependencies:**
+
+   ```bash
+   npm ci --prefix tools/marketplace-mcp
+   ```
+
+3. **Add the Atlassian MCP server** (for Jira/Confluence integration):
+
+   ```bash
+   claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse
+   ```
+
+   The first time you use an Atlassian tool, a browser window opens for OAuth. Each team member runs this once — it is stored in your local Claude Code config, not shared via the repo.
+
+4. **Configure environment variables:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and set `ATLASSIAN_CLOUD_ID` (obtained from the OAuth step above — run `getAccessibleAtlassianResources` in Claude Code) and `JIRA_DEFAULT_PROJECT`. The database and notification variables in `.env.example` are optional unless you use the jira-orchestrator plugin.
+
+5. **Open the repo in Claude Code.** The marketplace MCP server auto-loads via `.mcp.json` and provides plugin management tools.
+
+6. **Verify the setup:** In Claude Code, run `claude mcp list` to confirm `marketplace` and `atlassian` appear. Then ask Claude to "list plugins" to confirm the marketplace tools are active.
+
+### Installing plugins
+
 Install a plugin from this marketplace:
 
 ```bash
