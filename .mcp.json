@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "marketplace": {
+      "command": "node",
+      "args": ["tools/marketplace-mcp/src/index.js"],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
