@@ -4,19 +4,32 @@
 
 We build practical, high-quality plugins that extend what Claude Code can do. This repository is our central hub for developing, publishing, and discovering those tools.
 
-## What's here
+## Structure
 
-Each directory in this repo is a standalone Claude Code plugin, ready to install and use. Browse the folders to see what's available.
+```
+marketplace/
+  plugins/          # Original plugins we build and maintain
+  community/        # Forked, adapted, or linked third-party plugins
+  registry.json     # Central index of all available plugins
+```
+
+**`plugins/`** — First-party plugins created by our team. Each subdirectory is a standalone Claude Code plugin with its own `plugin.json`.
+
+**`community/`** — Plugins forked from or linked to upstream projects. Each includes attribution and a link back to the original source.
+
+**`registry.json`** — Machine-readable index of every plugin in the marketplace, validated against `registry.schema.json`.
 
 ## Getting started
 
-To install a plugin from this marketplace, point Claude Code at the plugin directory:
+To install a plugin from this marketplace:
 
-```
-claude install-plugin /path/to/plugin
-```
+```bash
+# First-party plugin
+claude install-plugin /path/to/marketplace/plugins/<plugin-name>
 
-Or reference it directly from the repo.
+# Community plugin
+claude install-plugin /path/to/marketplace/community/<plugin-name>
+```
 
 ## Contributing
 
