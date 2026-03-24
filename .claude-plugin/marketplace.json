@@ -1,32 +1,22 @@
 {
-  "version": "1.0.0",
-  "repository": "https://github.com/trusted-american/marketplace",
-  "plugins": {
-    "playwright": {
+  "name": "taia-marketplace",
+  "owner": {
+    "name": "Trusted American Insurance Agency"
+  },
+  "metadata": {
+    "description": "Plugin registry for Claude Code",
+    "version": "1.0.0",
+    "lastUpdated": "2026-03-24T23:02:13.799Z"
+  },
+  "plugins": [
+    {
       "name": "playwright",
-      "version": "0.1.0",
+      "source": "./plugins/playwright",
       "description": "Multi-agent Playwright test generation system that creates thorough, production-ready test suites one page at a time",
-      "category": "plugins",
-      "path": "plugins/playwright",
-      "components": {
-        "skills": [
-          "playwright-testing"
-        ],
-        "agents": [
-          "final-reviewer",
-          "flakiness-reviewer",
-          "frequency-reviewer",
-          "test-discoverer",
-          "test-writer"
-        ],
-        "commands": [
-          "create-tests"
-        ],
-        "templates": [
-          "spec-file"
-        ]
+      "version": "0.1.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
       },
-      "author": "Trusted American Insurance Agency",
       "license": "MIT",
       "keywords": [
         "playwright",
@@ -36,6 +26,5 @@
         "quality-assurance"
       ]
     }
-  },
-  "lastUpdated": "2026-03-24T22:55:37.249Z"
+  ]
 }

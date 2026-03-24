@@ -272,25 +272,52 @@ describe("generateRegistry", () => {
 // ── Shared module: writeRegistry ─────────────────────────────────────────────
 
 describe("writeRegistry", () => {
-  it("writes valid JSON to output path", async () => {
+  it("writes valid JSON with Claude Code marketplace schema", async () => {
     const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
     await writeRegistry(output, {});
     const data = JSON.parse(await fs.readFile(output, "utf-8"));
-    expect(data.version).toBe("1.0.0");
-    expect(data.plugins).toEqual({});
-    expect(data.lastUpdated).toBeDefined();
+    expect(data.name).toBe("taia-marketplace");
+    expect(data.owner).toEqual({ name: "Trusted American Insurance Agency" });
+    expect(Array.isArray(data.plugins)).toBe(true);
+    expect(data.plugins).toEqual([]);
+    expect(data.metadata.lastUpdated).toBeDefined();
   });
 
   it("creates parent directory if missing", async () => {
     const output = path.join(tmpDir, "nested", "dir", "marketplace.json");
     await writeRegistry(output, {});
     const data = JSON.parse(await fs.readFile(output, "utf-8"));
-    expect(data.version).toBe("1.0.0");
+    expect(data.name).toBe("taia-marketplace");
+  });
+
+  it("converts plugins object to array with source paths", async () => {
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
+    const plugins = {
+      "my-plugin": {
+        name: "my-plugin",
+        version: "1.0.0",
+        description: "A test plugin",
+        category: "plugins",
+        path: "plugins/my-plugin",
+        components: {},
+        author: "Test Author",
+        license: "MIT",
+      },
+    };
+    await writeRegistry(output, plugins);
+    const data = JSON.parse(await fs.readFile(output, "utf-8"));
+    expect(data.plugins).toHaveLength(1);
+    expect(data.plugins[0].name).toBe("my-plugin");
+    expect(data.plugins[0].source).toBe("./plugins/my-plugin");
+    expect(data.plugins[0].description).toBe("A test plugin");
+    expect(data.plugins[0].version).toBe("1.0.0");
+    expect(data.plugins[0].author).toEqual({ name: "Test Author" });
+    expect(data.plugins[0].license).toBe("MIT");
   });
 
   it("updates timestamp on every run", async () => {
     const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
-    const plugins = { test: { name: "test" } };
+    const plugins = { test: { name: "test", path: "plugins/test" } };
 
     await writeRegistry(output, plugins);
     const first = JSON.parse(await fs.readFile(output, "utf-8"));
@@ -300,22 +327,22 @@ describe("writeRegistry", () => {
     await writeRegistry(output, plugins);
     const second = JSON.parse(await fs.readFile(output, "utf-8"));
 
-    expect(second.lastUpdated).not.toBe(first.lastUpdated);
+    expect(second.metadata.lastUpdated).not.toBe(first.metadata.lastUpdated);
   });
 
   it("returns plugin count", async () => {
     const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
-    const result = await writeRegistry(output, { a: { name: "a" } });
+    const result = await writeRegistry(output, { a: { name: "a", path: "plugins/a" } });
     expect(result.count).toBe(1);
   });
 
-  it("puts lastUpdated as the last field in JSON", async () => {
+  it("omits version 0.0.0 from plugin entries", async () => {
     const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
-    await writeRegistry(output, { test: { name: "test" } });
-    const raw = await fs.readFile(output, "utf-8");
-    const lines = raw.trim().split("\n");
-    // lastUpdated should be the last key before the closing brace
-    expect(lines[lines.length - 2]).toMatch(/"lastUpdated"/);
+    await writeRegistry(output, {
+      test: { name: "test", path: "plugins/test", version: "0.0.0" },
+    });
+    const data = JSON.parse(await fs.readFile(output, "utf-8"));
+    expect(data.plugins[0].version).toBeUndefined();
   });
 });
 

@@ -103,20 +103,38 @@ export async function generateRegistry(pluginsDir, communityDir) {
 }
 
 /**
- * Write .claude-plugin/marketplace.json.
+ * Write .claude-plugin/marketplace.json in Claude Code's expected schema.
  * Timestamp updates on every run so CI always produces a fresh commit.
  */
 export async function writeRegistry(outputPath, plugins) {
   // Ensure parent directory exists
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
 
+  const pluginArray = Object.values(plugins).map((entry) => {
+    const plugin = {
+      name: entry.name,
+      source: `./${entry.path}`,
+    };
+    if (entry.description) plugin.description = entry.description;
+    if (entry.version && entry.version !== "0.0.0") plugin.version = entry.version;
+    if (entry.author) plugin.author = { name: entry.author };
+    if (entry.license) plugin.license = entry.license;
+    if (entry.keywords?.length) plugin.keywords = entry.keywords;
+    if (entry.repository) plugin.repository = entry.repository;
+    return plugin;
+  });
+
   const registry = {
-    version: "1.0.0",
-    repository: "https://github.com/trusted-american/marketplace",
-    plugins,
-    lastUpdated: new Date().toISOString(),
+    name: "taia-marketplace",
+    owner: { name: "Trusted American Insurance Agency" },
+    metadata: {
+      description: "Plugin registry for Claude Code",
+      version: "1.0.0",
+      lastUpdated: new Date().toISOString(),
+    },
+    plugins: pluginArray,
   };
 
   await fs.writeFile(outputPath, JSON.stringify(registry, null, 2) + "\n");
-  return { count: Object.keys(plugins).length };
+  return { count: pluginArray.length };
 }
