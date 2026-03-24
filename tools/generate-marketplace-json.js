@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Generates .claude/marketplace.json from all plugins in plugins/ and community/.
+ * Generates .claude-plugin/marketplace.json from all plugins in plugins/ and community/.
  * Run manually or via CI — the output is committed to the repo.
  */
 
