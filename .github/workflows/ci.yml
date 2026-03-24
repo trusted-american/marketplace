@@ -19,6 +19,8 @@ jobs:
 
           for dir in plugins/*/ community/*/; do
             [ -d "$dir" ] || continue
+            # skip claude (submodule)
+            [[ "$dir" == "community/claude/" ]] && continue
             plugin_ok=0
 
             for file in README.md LICENSE; do

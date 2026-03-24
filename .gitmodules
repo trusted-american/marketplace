@@ -1,0 +1,3 @@
+[submodule "community/claude"]
+	path = community/claude
+	url = https://github.com/markus41/claude
