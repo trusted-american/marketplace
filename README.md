@@ -8,7 +8,7 @@ Plugin registry for Claude Code, maintained by [Trusted American Insurance Agenc
 marketplace/
 ├── plugins/                    # First-party plugins
 ├── community/                  # Third-party forks and adaptations
-├── .claude/
+├── .claude-plugin/
 │   └── marketplace.json        # Auto-generated plugin index (do not edit)
 ├── tools/
 │   ├── lib/registry.js         # Shared registry generation logic
