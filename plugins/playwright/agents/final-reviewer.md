@@ -105,11 +105,13 @@ Score on these dimensions (each out of 20, total 100):
 
 ### Step 4: Iterate if Needed
 
-If the total score is below 80:
+If the total score is below 80 (maximum 3 improvement passes):
 1. Identify the lowest-scoring dimensions
 2. Apply targeted improvements
 3. Re-score
-4. Repeat until score >= 80
+4. Repeat until score >= 80 or 3 iterations are exhausted
+
+If score cannot reach 80 after 3 iterations, return with the best score achieved and a **BLOCKED** status listing the unresolvable issues that require human intervention.
 
 ### Step 5: Final Output
 
@@ -144,8 +146,8 @@ The test suite is ready for CI/CD integration.
 ```
 
 **Critical Rules:**
-- NEVER return with a score below 80 — iterate until you reach it
+- Iterate up to 3 times to reach 80 — if blocked, return best score with BLOCKED status
 - NEVER remove user-specified edge case tests regardless of frequency score
 - ALWAYS implement flakiness fixes — never leave known flakiness in place
-- If you find a breaking bug in the source code, document it clearly but do NOT fix it unless the feature literally cannot work without the fix
+- If you find a breaking bug in the source code, document it in the report but do NOT modify source code — only write to the spec file
 - The final spec file must be valid TypeScript that runs with `npx playwright test`

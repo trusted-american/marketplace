@@ -37,9 +37,9 @@ const responsePromise = page.waitForResponse('**/api/data');
 await page.getByRole('button', { name: 'Load' }).click();
 await responsePromise;
 
-// Wait for network idle after action
+// Wait for specific outcome after action (avoid networkidle — unreliable in SPAs)
 await page.getByRole('button', { name: 'Submit' }).click();
-await page.waitForLoadState('networkidle');
+await expect(page.getByText('Submitted successfully')).toBeVisible();
 ```
 
 ## Mocking Network Requests
