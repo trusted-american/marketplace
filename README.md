@@ -61,7 +61,7 @@ plugin-name/
 1. **Clone the repo:**
 
    ```bash
-   git clone https://github.com/taia-us/marketplace.git
+   git clone https://github.com/trusted-american/marketplace.git
    cd marketplace
    ```
 
