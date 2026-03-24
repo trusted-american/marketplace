@@ -49,7 +49,7 @@ async function readJsonSafe(p) {
 async function regenerateMarketplaceJson() {
   const { plugins, warnings } = await generateRegistry(PLUGINS_DIR, COMMUNITY_DIR);
   for (const w of warnings) console.warn(`WARNING: ${w}`);
-  const { count } = await writeRegistry(path.join(MARKETPLACE_ROOT, ".claude", "marketplace.json"), plugins);
+  const { count } = await writeRegistry(path.join(MARKETPLACE_ROOT, ".claude-plugin", "marketplace.json"), plugins);
   return count;
 }
 

@@ -103,7 +103,7 @@ export async function generateRegistry(pluginsDir, communityDir) {
 }
 
 /**
- * Write .claude/marketplace.json.
+ * Write .claude-plugin/marketplace.json.
  * Timestamp updates on every run so CI always produces a fresh commit.
  */
 export async function writeRegistry(outputPath, plugins) {

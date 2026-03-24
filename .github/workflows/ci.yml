@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check required files
         run: |
@@ -52,9 +52,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
 
@@ -66,29 +66,86 @@ jobs:
         working-directory: tools/marketplace-mcp
         run: npm test
 
+  verify-registry:
+    name: Verify marketplace.json matches source
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Regenerate and verify marketplace.json plugins match
+        run: |
+          # Save committed plugin data (ignore lastUpdated since it changes every run)
+          node -e "
+            const d = require('./.claude-plugin/marketplace.json');
+            delete d.lastUpdated;
+            console.log(JSON.stringify(d));
+          " > /tmp/committed.json 2>/dev/null || echo '{}' > /tmp/committed.json
+
+          # Regenerate
+          node tools/generate-marketplace-json.js
+
+          # Compare plugin data only
+          node -e "
+            const d = require('./.claude-plugin/marketplace.json');
+            delete d.lastUpdated;
+            console.log(JSON.stringify(d));
+          " > /tmp/generated.json
+
+          if ! diff /tmp/committed.json /tmp/generated.json > /dev/null 2>&1; then
+            echo "ERROR: .claude-plugin/marketplace.json is out of date or was manually edited."
+            echo "Run 'node tools/generate-marketplace-json.js' and commit the result."
+            diff /tmp/committed.json /tmp/generated.json || true
+            exit 1
+          fi
+          echo "OK: marketplace.json matches plugin source data"
+
   update-registry:
-    name: Update .claude/marketplace.json
+    name: Update .claude-plugin/marketplace.json
     runs-on: ubuntu-latest
     needs: [validate, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
 
-      - name: Generate .claude/marketplace.json
+      - name: Generate .claude-plugin/marketplace.json
         run: node tools/generate-marketplace-json.js
 
-      - name: Commit updated registry
+      - name: Commit and push updated registry
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .claude/marketplace.json
-          git diff --cached --quiet || git commit -m "chore: update marketplace.json [skip ci]"
-          git push
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/marketplace.json
+          git diff --cached --quiet && exit 0
+
+          git commit -m "chore: update marketplace.json [skip ci]"
+
+          # Try direct push first; fall back to PR if branch is protected
+          if ! git push 2>/dev/null; then
+            BRANCH="chore/update-marketplace-json-$(date +%s)"
+            git checkout -b "$BRANCH"
+            git push -u origin "$BRANCH"
+            gh pr create \
+              --title "chore: update marketplace.json" \
+              --body "Auto-generated registry update from CI." \
+              --base main \
+              --head "$BRANCH" \
+              --label "automerge"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
