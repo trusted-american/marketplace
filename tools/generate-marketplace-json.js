@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Generates marketplace.json from all plugins in plugins/ and community/.
- * Run manually or via CI — the output is committed to the repo root.
+ * Generates .claude/marketplace.json from all plugins in plugins/ and community/.
+ * Run manually or via CI — the output is committed to the repo.
  */
 
 import path from "path";
@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const PLUGINS_DIR = path.join(ROOT, "plugins");
 const COMMUNITY_DIR = path.join(ROOT, "community");
-const OUTPUT = path.join(ROOT, "marketplace.json");
+const OUTPUT = path.join(ROOT, ".claude", "marketplace.json");
 
 async function generate() {
   const { plugins, warnings } = await generateRegistry(PLUGINS_DIR, COMMUNITY_DIR);
@@ -22,9 +22,9 @@ async function generate() {
     console.warn(`WARNING: ${w}`);
   }
 
-  const { count, changed } = await writeRegistry(OUTPUT, plugins);
+  const { count } = await writeRegistry(OUTPUT, plugins);
 
-  console.log(`marketplace.json: ${count} plugin(s) indexed${changed ? "" : " (unchanged)"}`);
+  console.log(`.claude/marketplace.json: ${count} plugin(s) indexed`);
   for (const [name, p] of Object.entries(plugins)) {
     console.log(`  ${p.category}/${name} v${p.version}`);
   }
