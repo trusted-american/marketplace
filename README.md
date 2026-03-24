@@ -66,15 +66,15 @@ The `name` field is required and must be kebab-case (`^[a-z0-9-]+$`). All other 
 }
 ```
 
-Names must be unique across the entire marketplace. If two plugins share a `name`, CI will warn and the second one overwrites the first in `.claude/marketplace.json`.
+Names must be unique across the entire marketplace. If two plugins share a `name`, CI will warn and the second one overwrites the first in `.claude-plugin/marketplace.json`.
 
 ## How marketplace.json works
 
-`.claude/marketplace.json` is a generated index of all plugins. It is **not** updated in PRs. The flow:
+`.claude-plugin/marketplace.json` is a generated index of all plugins. It is **not** updated in PRs. The flow:
 
 1. A PR adds or modifies plugins and passes CI validation.
 2. The PR merges to `main`.
-3. CI runs `node tools/generate-marketplace-json.js`, which scans `plugins/` and `community/`, reads each `plugin.json`, collects component directories, and writes `.claude/marketplace.json`.
+3. CI runs `node tools/generate-marketplace-json.js`, which scans `plugins/` and `community/`, reads each `plugin.json`, collects component directories, and writes `.claude-plugin/marketplace.json`.
 4. CI commits the updated file to `main` with `[skip ci]` to avoid a loop.
 
 The `lastUpdated` timestamp updates on every run. The generation logic lives in `tools/lib/registry.js` and is shared between the CLI script and the MCP server.
@@ -103,7 +103,7 @@ Every push and PR runs two jobs:
 
 On merge to `main`, a third job runs:
 
-3. **Update registry** — Regenerates `.claude/marketplace.json` and commits it.
+3. **Update registry** — Regenerates `.claude-plugin/marketplace.json` and commits it.
 
 ## Setup
 

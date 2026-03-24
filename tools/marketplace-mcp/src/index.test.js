@@ -273,7 +273,7 @@ describe("generateRegistry", () => {
 
 describe("writeRegistry", () => {
   it("writes valid JSON to output path", async () => {
-    const output = path.join(tmpDir, ".claude", "marketplace.json");
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
     await writeRegistry(output, {});
     const data = JSON.parse(await fs.readFile(output, "utf-8"));
     expect(data.version).toBe("1.0.0");
@@ -289,7 +289,7 @@ describe("writeRegistry", () => {
   });
 
   it("updates timestamp on every run", async () => {
-    const output = path.join(tmpDir, ".claude", "marketplace.json");
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
     const plugins = { test: { name: "test" } };
 
     await writeRegistry(output, plugins);
@@ -304,13 +304,13 @@ describe("writeRegistry", () => {
   });
 
   it("returns plugin count", async () => {
-    const output = path.join(tmpDir, ".claude", "marketplace.json");
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
     const result = await writeRegistry(output, { a: { name: "a" } });
     expect(result.count).toBe(1);
   });
 
   it("puts lastUpdated as the last field in JSON", async () => {
-    const output = path.join(tmpDir, ".claude", "marketplace.json");
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
     await writeRegistry(output, { test: { name: "test" } });
     const raw = await fs.readFile(output, "utf-8");
     const lines = raw.trim().split("\n");

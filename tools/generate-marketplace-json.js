@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const PLUGINS_DIR = path.join(ROOT, "plugins");
 const COMMUNITY_DIR = path.join(ROOT, "community");
-const OUTPUT = path.join(ROOT, ".claude", "marketplace.json");
+const OUTPUT = path.join(ROOT, ".claude-plugin", "marketplace.json");
 
 async function generate() {
   const { plugins, warnings } = await generateRegistry(PLUGINS_DIR, COMMUNITY_DIR);
@@ -24,7 +24,7 @@ async function generate() {
 
   const { count } = await writeRegistry(OUTPUT, plugins);
 
-  console.log(`.claude/marketplace.json: ${count} plugin(s) indexed`);
+  console.log(`.claude-plugin/marketplace.json: ${count} plugin(s) indexed`);
   for (const [name, p] of Object.entries(plugins)) {
     console.log(`  ${p.category}/${name} v${p.version}`);
   }
