@@ -1,78 +1,72 @@
 # playwright
 
-Multi-agent Playwright test generation system that creates thorough, production-ready test suites one page at a time.
+Multi-agent Playwright test generation. Given a page file and a description of edge cases to cover, it produces a production-ready `.spec.ts` file through a 5-phase pipeline: investigation, parallel test writing, parallel review, finalization, and reporting.
 
 ## Components
 
-| Type | Name | Description |
-|------|------|-------------|
-| Command | `create-tests` | Generate a Playwright test suite for a page with multi-agent review |
-| Agent | `test-writer` | Writes tests for user-specified edge cases |
-| Agent | `test-discoverer` | Discovers additional critical tests beyond what was specified |
-| Agent | `frequency-reviewer` | Evaluates test value and CI time impact |
-| Agent | `flakiness-reviewer` | Audits for flakiness, concurrency issues, and independence |
-| Agent | `final-reviewer` | Implements fixes and certifies production readiness (80+ score) |
-| Skill | `playwright-testing` | Best practices for selectors, waits, mocking, and assertions |
-| Template | `spec-file` | Output template for generated Playwright spec files |
+| Type | Name | Role |
+|---|---|---|
+| Command | `create-tests` | Entry point — orchestrates the full pipeline |
+| Agent | `test-writer` | Writes tests for the user-specified edge cases |
+| Agent | `test-discoverer` | Finds and writes tests for scenarios the user didn't specify |
+| Agent | `frequency-reviewer` | Scores each test by real-world likelihood and impact |
+| Agent | `flakiness-reviewer` | Audits for timing issues, shared state, and non-determinism |
+| Agent | `final-reviewer` | Applies all review fixes, scores the suite, iterates until 80+ |
+| Skill | `playwright-testing` | Reference material for selectors, waits, mocking, and assertions |
+| Template | `spec-file` | Structural template for generated spec files |
 
 ## Usage
-
-Generate tests for a page:
 
 ```
 /playwright:create-tests src/pages/Dashboard.tsx "form validation, empty state, session timeout"
 ```
 
-The command orchestrates a 5-phase workflow:
+The first argument is the page file path. Everything after it is a free-text description of edge cases to cover.
 
-1. **Investigate** the page and all its dependencies
-2. **Write** user-specified tests + discover additional coverage (parallel)
-3. **Review** for frequency value + flakiness risks (parallel)
-4. **Finalize** — apply fixes, score, iterate until 80+
-5. **Report** — summary with quality score
+### Pipeline
+
+1. **Investigate** — Reads the target page and traces all imports (components, hooks, API calls, types, routes) to build a complete behavior map.
+2. **Write** (parallel) — `test-writer` implements the specified edge cases. `test-discoverer` finds additional gaps (error states, loading states, accessibility, boundary conditions). Results are merged and deduplicated.
+3. **Review** (parallel) — `frequency-reviewer` categorizes each test by value (essential / valuable / useful / questionable / remove). `flakiness-reviewer` checks for timing issues, selector fragility, test independence violations, and environment sensitivity.
+4. **Finalize** — `final-reviewer` applies all fixes, removes low-value tests, and scores the suite across 5 dimensions (reliability, coverage, independence, code quality, assertions). Iterates up to 3 times to reach a score of 80/100.
+5. **Report** — Outputs the spec file location, test counts by category, applied fixes, and the final quality score.
+
+### Output
+
+A single `.spec.ts` file. The command never modifies source code. If it finds bugs in the source during investigation, it documents them in the report.
 
 ## Configuration
 
-Create `.claude/playwright.local.md` in your project root to customize defaults:
+Create `.claude/playwright.local.md` in your project root to override defaults:
 
-```markdown
+```yaml
 ---
 baseURL: "http://localhost:3000"
-browsers:
-  - chromium
+browsers: ["chromium"]
 timeout: 30000
-viewport:
-  width: 1280
-  height: 720
+viewport: { width: 1280, height: 720 }
 auth:
   setupFile: "tests/auth.setup.ts"
   storageState: "tests/.auth/user.json"
 outputDir: "tests/e2e"
 namingPattern: "{page-name}.spec.ts"
 ---
-
-## Project-Specific Testing Notes
-
-Add any project-specific context here that the test generator should know about:
-- Authentication flow details
-- API endpoint patterns
-- Custom component naming conventions
-- Known limitations or quirks
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `baseURL` | string | `http://localhost:3000` | Base URL for `page.goto()` |
-| `browsers` | string[] | `["chromium"]` | Browsers to target |
-| `timeout` | number | `30000` | Default test timeout (ms) |
-| `viewport.width` | number | `1280` | Viewport width |
-| `viewport.height` | number | `720` | Viewport height |
-| `auth.setupFile` | string | — | Path to auth setup file |
-| `auth.storageState` | string | — | Path to stored auth state |
-| `outputDir` | string | `tests/e2e` | Where spec files are created |
-| `namingPattern` | string | `{page-name}.spec.ts` | Spec file naming pattern |
+Add any project-specific context below the frontmatter (authentication flows, API patterns, component conventions) and the agents will incorporate it.
 
-## Installation
+| Field | Default | Description |
+|---|---|---|
+| `baseURL` | `http://localhost:3000` | Base URL for `page.goto()` |
+| `browsers` | `["chromium"]` | Target browsers |
+| `timeout` | `30000` | Test timeout in ms |
+| `viewport` | `1280x720` | Viewport dimensions |
+| `auth.setupFile` | none | Path to auth setup file |
+| `auth.storageState` | none | Path to stored auth state |
+| `outputDir` | `tests/e2e` | Output directory for spec files |
+| `namingPattern` | `{page-name}.spec.ts` | Spec file naming pattern |
+
+## Install
 
 ```bash
 claude plugin install playwright@marketplace
