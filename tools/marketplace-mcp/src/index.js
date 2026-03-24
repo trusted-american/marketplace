@@ -605,10 +605,73 @@ server.tool(
 
 server.tool(
   "get_conventions",
-  "Get the marketplace conventions and plugin structure requirements",
+  "Get the marketplace conventions, plugin structure, and marketplace.json schema",
   {},
   async () => {
     const text = `# Marketplace Plugin Conventions
+
+Reference: https://code.claude.com/docs/en/plugin-marketplaces
+
+## marketplace.json schema
+
+The file at .claude-plugin/marketplace.json defines the marketplace catalog.
+
+### Required root fields
+| Field   | Type   | Description |
+|---------|--------|-------------|
+| name    | string | Marketplace identifier (kebab-case). Users see this: /plugin install my-tool@marketplace-name |
+| owner   | object | Maintainer info: { name: string (required), email?: string } |
+| plugins | array  | List of plugin entries |
+
+### Optional root fields
+| Field                  | Type   | Description |
+|------------------------|--------|-------------|
+| metadata.description   | string | Brief marketplace description |
+| metadata.version       | string | Marketplace version |
+| metadata.pluginRoot    | string | Base directory prepended to relative plugin source paths |
+
+### Plugin entry required fields
+| Field  | Type           | Description |
+|--------|----------------|-------------|
+| name   | string         | Plugin identifier (kebab-case) |
+| source | string|object  | Where to fetch the plugin from |
+
+### Plugin entry optional fields
+| Field       | Type           | Description |
+|-------------|----------------|-------------|
+| description | string         | Brief plugin description |
+| version     | string         | Plugin version (semver) |
+| author      | object         | { name: string, email?: string } |
+| homepage    | string         | Plugin homepage URL |
+| repository  | string         | Source code repository URL |
+| license     | string         | SPDX license identifier |
+| keywords    | array          | Tags for discovery |
+| category    | string         | Plugin category |
+| tags        | array          | Tags for searchability |
+| strict      | boolean        | Whether plugin.json is the authority (default: true) |
+| commands    | string|array   | Custom paths to command files |
+| agents      | string|array   | Custom paths to agent files |
+| hooks       | string|object  | Custom hooks configuration |
+| mcpServers  | string|object  | MCP server configurations |
+| lspServers  | string|object  | LSP server configurations |
+
+### Plugin source types
+
+**Relative path** (same repo): \`"source": "./plugins/my-plugin"\`
+- Must start with ./
+- Only works with Git-based marketplace distribution
+
+**GitHub**: \`"source": { "source": "github", "repo": "owner/repo", "ref?": "v1.0", "sha?": "abc123" }\`
+
+**Git URL**: \`"source": { "source": "url", "url": "https://gitlab.com/team/plugin.git", "ref?": "main", "sha?": "abc123" }\`
+
+**Git subdirectory**: \`"source": { "source": "git-subdir", "url": "https://github.com/org/monorepo.git", "path": "tools/plugin", "ref?": "v2.0", "sha?": "abc123" }\`
+
+**npm**: \`"source": { "source": "npm", "package": "@org/plugin", "version?": "^2.0.0", "registry?": "https://npm.example.com" }\`
+
+### Strict mode
+- strict: true (default) — plugin.json is the authority, marketplace supplements
+- strict: false — marketplace entry is the entire definition, plugin.json must not declare components
 
 ## Required files for every plugin
 - README.md — Installation and usage instructions

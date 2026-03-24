@@ -81,10 +81,10 @@ jobs:
 
       - name: Regenerate and verify marketplace.json plugins match
         run: |
-          # Save committed plugin data (ignore lastUpdated since it changes every run)
+          # Save committed plugin data (ignore metadata since lastUpdated changes every run)
           node -e "
             const d = require('./.claude-plugin/marketplace.json');
-            delete d.lastUpdated;
+            delete d.metadata;
             console.log(JSON.stringify(d));
           " > /tmp/committed.json 2>/dev/null || echo '{}' > /tmp/committed.json
 
@@ -94,7 +94,7 @@ jobs:
           # Compare plugin data only
           node -e "
             const d = require('./.claude-plugin/marketplace.json');
-            delete d.lastUpdated;
+            delete d.metadata;
             console.log(JSON.stringify(d));
           " > /tmp/generated.json
 
@@ -114,7 +114,6 @@ jobs:
 
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -134,18 +133,4 @@ jobs:
           git diff --cached --quiet && exit 0
 
           git commit -m "chore: update marketplace.json [skip ci]"
-
-          # Try direct push first; fall back to PR if branch is protected
-          if ! git push 2>/dev/null; then
-            BRANCH="chore/update-marketplace-json-$(date +%s)"
-            git checkout -b "$BRANCH"
-            git push -u origin "$BRANCH"
-            gh pr create \
-              --title "chore: update marketplace.json" \
-              --body "Auto-generated registry update from CI." \
-              --base main \
-              --head "$BRANCH" \
-              --label "automerge"
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git push
