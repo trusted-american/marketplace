@@ -1,6 +1,6 @@
 # Marketplace
 
-**A curated collection of Claude Code plugins by [Trusted American Organization](https://github.com/Trusted-American-Organization).**
+**A curated collection of Claude Code plugins by [Trusted American Insurance Agency]([https://github.com/Trusted-American-Organization](https://taia.us/)).**
 
 We build practical, high-quality plugins that extend what Claude Code can do. This repository is our central hub for developing, publishing, and discovering those tools.
 
