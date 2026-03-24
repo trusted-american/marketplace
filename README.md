@@ -1,130 +1,152 @@
 # Marketplace
 
-**A curated collection of Claude Code plugins by [Trusted American Insurance Agency](https://taia.us/).**
+Plugin registry for Claude Code, maintained by [Trusted American Insurance Agency](https://taia.us/).
 
-We build practical, high-quality plugins that extend what Claude Code can do. This repository is our central hub for developing, publishing, and discovering those tools.
-
-## Structure
+## Repository layout
 
 ```
 marketplace/
-├── plugins/                    # Original plugins we build and maintain
-├── community/                  # Forked, adapted, or linked third-party plugins
+├── plugins/                    # First-party plugins
+├── community/                  # Third-party forks and adaptations
 ├── tools/
+│   ├── lib/registry.js         # Shared registry generation logic
+│   ├── generate-marketplace-json.js  # CLI script to regenerate marketplace.json
 │   └── marketplace-mcp/        # MCP server for plugin management
-├── .github/workflows/ci.yml    # CI validation
-└── .mcp.json                   # MCP server config (auto-loads in Claude Code)
+├── marketplace.json            # Auto-generated plugin index (do not edit)
+├── .github/workflows/ci.yml    # Validation + registry generation
+└── .mcp.json                   # Auto-loads the MCP server in Claude Code
 ```
 
-**`plugins/`** — First-party plugins created by our team.
+## Plugin structure
 
-**`community/`** — Plugins forked from or linked to upstream projects. Each includes attribution and a link back to the original source.
-
-## Plugin requirements
-
-Every plugin (in both `plugins/` and `community/`) must include:
+Every plugin in `plugins/` or `community/` must contain these files:
 
 | File | Purpose |
 |---|---|
-| `README.md` | Installation and usage instructions |
+| `README.md` | Usage documentation |
 | `LICENSE` | License file |
-| `.claude-plugin/plugin.json` | Plugin manifest with at minimum a `name` field |
+| `.claude-plugin/plugin.json` | Plugin manifest |
 
-### Plugin directory structure
+Components go in the plugin root, never inside `.claude-plugin/`:
 
 ```
 plugin-name/
 ├── .claude-plugin/
-│   └── plugin.json             # Manifest (only this goes here)
-├── skills/                     # Skill directories with SKILL.md
+│   └── plugin.json          # Manifest — only file in this directory
+├── skills/                  # Each skill is a subdirectory with a SKILL.md
 │   └── skill-name/
 │       └── SKILL.md
-├── agents/                     # Agent markdown files
+├── agents/                  # Agent definitions (.md files)
 │   └── agent-name.md
-├── commands/                   # Command markdown files
+├── commands/                # Slash command definitions (.md files)
 │   └── command-name.md
-├── hooks/                      # Hook configuration
+├── hooks/                   # Hook configurations (.json files)
 │   └── hooks.json
-├── templates/                  # Output template files
+├── templates/               # Output templates (.md files)
 │   └── template-name.md
-├── .mcp.json                   # MCP server config (optional)
+├── .mcp.json                # MCP server config (optional)
 ├── README.md
 └── LICENSE
 ```
 
-> **Important:** Never put `commands/`, `agents/`, `skills/`, `hooks/`, or `templates/` inside `.claude-plugin/`. Only `plugin.json` goes there.
+### plugin.json manifest
 
-## Getting started
+The `name` field is required and must be kebab-case (`^[a-z0-9-]+$`). All other fields are optional but recommended.
 
-### Team setup
+```json
+{
+  "name": "my-plugin",
+  "version": "0.1.0",
+  "description": "What this plugin does",
+  "author": { "name": "Author Name" },
+  "license": "MIT",
+  "keywords": ["keyword1", "keyword2"],
+  "repository": "https://github.com/org/repo"
+}
+```
 
-**Prerequisites:** [Claude Code](https://claude.ai/code) installed and authenticated. Node.js 18+ (22 recommended to match CI).
+Names must be unique across the entire marketplace. If two plugins share a `name`, CI will warn and the second one overwrites the first in `marketplace.json`.
 
-1. **Clone the repo:**
+## How marketplace.json works
 
-   ```bash
-   git clone https://github.com/trusted-american/marketplace.git
-   cd marketplace
-   ```
+`marketplace.json` is a generated index of all plugins. It is **not** updated in PRs. The flow:
 
-2. **Install MCP server dependencies:**
+1. A PR adds or modifies plugins and passes CI validation.
+2. The PR merges to `main`.
+3. CI runs `node tools/generate-marketplace-json.js`, which scans `plugins/` and `community/`, reads each `plugin.json`, collects component directories, and writes `marketplace.json`.
+4. If the plugin data changed, CI commits the updated file to `main` with `[skip ci]` to avoid a loop.
 
-   ```bash
-   npm ci --prefix tools/marketplace-mcp
-   ```
+The `generated` timestamp only updates when plugin data actually changes, not on every run.
 
-3. **Add the Atlassian MCP server** (for Jira/Confluence integration):
+The generation logic lives in `tools/lib/registry.js` and is shared between the CLI script and the MCP server.
 
-   ```bash
-   claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse
-   ```
+## MCP server
 
-   The first time you use an Atlassian tool, a browser window opens for OAuth. Each team member runs this once — it is stored in your local Claude Code config, not shared via the repo.
+The MCP server at `tools/marketplace-mcp/` auto-loads when you open this repo in Claude Code (configured in `.mcp.json`). It exposes 6 tools:
 
-4. **Configure environment variables:**
+| Tool | What it does |
+|---|---|
+| `create_plugin` | Scaffolds a new plugin with required files and correct directory structure |
+| `validate_plugin` | Checks a plugin for required files, valid manifest, and component structure |
+| `validate_all` | Validates every plugin in `plugins/` and `community/` |
+| `list_plugins` | Lists all plugins with version, description, and component breakdown |
+| `add_component` | Adds a skill, agent, command, hook, or template to an existing plugin |
+| `get_conventions` | Returns the full marketplace conventions document |
 
-   ```bash
-   cp .env.example .env
-   ```
+Validation checks: required files exist, `plugin.json` is valid JSON with a kebab-case `name`, and any component directories that exist contain correctly typed files (`.md` for skills/agents/commands/templates, `.json` for hooks).
 
-   Edit `.env` and set `ATLASSIAN_CLOUD_ID` (obtained from the OAuth step above — run `getAccessibleAtlassianResources` in Claude Code) and `JIRA_DEFAULT_PROJECT`. The database and notification variables in `.env.example` are optional unless you use the jira-orchestrator plugin.
+## CI pipeline
 
-5. **Open the repo in Claude Code.** The marketplace MCP server auto-loads via `.mcp.json` and provides plugin management tools.
+Every push and PR runs two jobs:
 
-6. **Verify the setup:** In Claude Code, run `claude mcp list` to confirm `marketplace` and `atlassian` appear. Then ask Claude to "list plugins" to confirm the marketplace tools are active.
+1. **Validate plugins** — Shell script checks every directory in `plugins/` and `community/` for `README.md`, `LICENSE`, and a valid `.claude-plugin/plugin.json` with a kebab-case `name`.
+2. **Test MCP server** — Runs `npm test` in `tools/marketplace-mcp/` (vitest, 56 tests covering validation, registry generation, component handling, and security).
 
-### Installing plugins
+On merge to `main`, a third job runs:
 
-Install a plugin from this marketplace:
+3. **Update registry** — Regenerates `marketplace.json` and commits if changed.
+
+## Setup
+
+Prerequisites: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Node.js 18+ (22 recommended).
+
+```bash
+git clone https://github.com/trusted-american/marketplace.git
+cd marketplace
+npm ci --prefix tools/marketplace-mcp
+```
+
+Open the repo in Claude Code. The MCP server loads automatically. Run `list plugins` to verify.
+
+### Optional: Atlassian integration
+
+If you use the jira-orchestrator plugin for Jira/Confluence integration:
+
+```bash
+claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse
+cp .env.example .env
+# Edit .env — set ATLASSIAN_CLOUD_ID and JIRA_DEFAULT_PROJECT at minimum
+```
+
+The first Atlassian tool call opens a browser for OAuth. Run `getAccessibleAtlassianResources` to find your Cloud ID. This config is per-user (stored in your local Claude Code config, not committed to the repo).
+
+## Installing plugins
+
+From the marketplace:
 
 ```bash
 claude plugin install <plugin-name>@marketplace
 ```
 
-Or load locally for development:
+For local development:
 
 ```bash
 claude --plugin-dir ./plugins/<plugin-name>
 ```
 
-## Tooling
-
-This repo includes an MCP server at `tools/marketplace-mcp/` that auto-loads when you open the repo in Claude Code. It provides tools for:
-
-- **`create_plugin`** — Scaffold a new plugin with all required files and correct structure
-- **`validate_plugin`** — Check a single plugin for required files and valid manifest
-- **`validate_all`** — Validate every plugin in the marketplace
-- **`list_plugins`** — List all plugins with version, description, and components
-- **`add_component`** — Add a skill, agent, command, hook, or template to an existing plugin
-- **`get_conventions`** — View the full marketplace conventions and structure rules
-
-## CI
-
-Every push and PR to `main` runs validation to ensure all plugins have the required `README.md`, `LICENSE`, and `.claude-plugin/plugin.json`.
-
 ## Contributing
 
-This marketplace is maintained by the Trusted American Insurance Agency team. If you'd like to contribute a plugin or suggest an improvement, open an issue or submit a pull request.
+Open an issue or submit a pull request. CI validates plugin structure automatically — if validation passes, the plugin follows conventions.
 
 ## License
 
