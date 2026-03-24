@@ -1,0 +1,3 @@
+[submodule "plugins/claude"]
+	path = plugins/claude
+	url = https://github.com/markus41/claude
