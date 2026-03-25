@@ -138,12 +138,20 @@ export async function generateRegistry(pluginsDir, communityDir) {
   }
 
   // Scan community/ — each subdirectory is a submodule repo that may contain a plugins/ folder
+  const warnedSubmodules = new Set();
   for (const repo of await listDirs(communityDir)) {
     const repoPluginsDir = path.join(communityDir, repo, "plugins");
     if (!(await fileExists(repoPluginsDir))) continue;
 
     const submodulePath = `community/${repo}`;
     const submoduleUrl = submodules[submodulePath];
+
+    if (!submoduleUrl && !warnedSubmodules.has(submodulePath)) {
+      warnings.push(
+        `No .gitmodules entry for "${submodulePath}" — plugins in this repo will use a relative source path that requires submodule init`
+      );
+      warnedSubmodules.add(submodulePath);
+    }
 
     for (const dirName of await listDirs(repoPluginsDir)) {
       const categoryPath = `community/${repo}/plugins`;
@@ -156,10 +164,6 @@ export async function generateRegistry(pluginsDir, communityDir) {
           url: submoduleUrl,
           path: `plugins/${dirName}`,
         };
-      } else {
-        warnings.push(
-          `No .gitmodules entry for "${submodulePath}" — plugin "${entry.name}" will use a relative source path that requires submodule init`
-        );
       }
 
       if (plugins[entry.name]) {
