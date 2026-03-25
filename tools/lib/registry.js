@@ -24,6 +24,38 @@ export async function fileExists(p) {
   }
 }
 
+/**
+ * Parse .gitmodules to extract submodule path → URL mappings.
+ * Returns e.g. { "community/claude": "https://github.com/markus41/claude" }
+ */
+export async function parseGitmodules(rootDir) {
+  const gitmodulesPath = path.join(rootDir, ".gitmodules");
+  try {
+    const content = await fs.readFile(gitmodulesPath, "utf-8");
+    const mapping = {};
+    let currentPath = null;
+    let currentUrl = null;
+
+    for (const line of content.split("\n")) {
+      const pathMatch = line.match(/^\s*path\s*=\s*(.+?)\s*$/);
+      const urlMatch = line.match(/^\s*url\s*=\s*(.+?)\s*$/);
+
+      if (pathMatch) currentPath = pathMatch[1];
+      if (urlMatch) currentUrl = urlMatch[1];
+
+      if (currentPath && currentUrl) {
+        mapping[currentPath] = currentUrl;
+        currentPath = null;
+        currentUrl = null;
+      }
+    }
+
+    return mapping;
+  } catch {
+    return {};
+  }
+}
+
 const COMPONENT_TYPES = ["skills", "agents", "commands", "hooks", "templates"];
 
 export { COMPONENT_TYPES };
@@ -80,10 +112,17 @@ export async function collectPlugin(category, name, base) {
 /**
  * Scan plugins/ and community/ directories and build the registry.
  * Returns { plugins, warnings } where warnings includes duplicate name detection.
+ *
+ * Community plugins are resolved to git-subdir sources using .gitmodules so that
+ * users installing from the marketplace don't need to init submodules.
  */
 export async function generateRegistry(pluginsDir, communityDir) {
   const plugins = {};
   const warnings = [];
+
+  // Parse .gitmodules to resolve community submodule URLs
+  const rootDir = path.dirname(pluginsDir);
+  const submodules = await parseGitmodules(rootDir);
 
   // Scan top-level plugins/
   for (const name of await listDirs(pluginsDir)) {
@@ -103,10 +142,25 @@ export async function generateRegistry(pluginsDir, communityDir) {
     const repoPluginsDir = path.join(communityDir, repo, "plugins");
     if (!(await fileExists(repoPluginsDir))) continue;
 
-    for (const name of await listDirs(repoPluginsDir)) {
+    const submodulePath = `community/${repo}`;
+    const submoduleUrl = submodules[submodulePath];
+
+    for (const dirName of await listDirs(repoPluginsDir)) {
       const categoryPath = `community/${repo}/plugins`;
-      const entry = await collectPlugin(categoryPath, name, repoPluginsDir);
+      const entry = await collectPlugin(categoryPath, dirName, repoPluginsDir);
       if (!entry) continue;
+
+      // Attach upstream info so writeRegistry emits a git-subdir source
+      if (submoduleUrl) {
+        entry.upstream = {
+          url: submoduleUrl,
+          path: `plugins/${dirName}`,
+        };
+      } else {
+        warnings.push(
+          `No .gitmodules entry for "${submodulePath}" — plugin "${entry.name}" will use a relative source path that requires submodule init`
+        );
+      }
 
       if (plugins[entry.name]) {
         warnings.push(
@@ -131,8 +185,20 @@ export async function writeRegistry(outputPath, plugins) {
   const pluginArray = Object.values(plugins).map((entry) => {
     const plugin = {
       name: entry.name,
-      source: `./${entry.path}`,
     };
+
+    // Community plugins with upstream info use git-subdir so users don't need
+    // to init submodules. First-party plugins use relative paths.
+    if (entry.upstream) {
+      plugin.source = {
+        source: "git-subdir",
+        url: entry.upstream.url,
+        path: entry.upstream.path,
+      };
+    } else {
+      plugin.source = `./${entry.path}`;
+    }
+
     if (entry.description) plugin.description = entry.description;
     if (entry.version && entry.version !== "0.0.0") plugin.version = entry.version;
     if (entry.author) plugin.author = { name: entry.author };
