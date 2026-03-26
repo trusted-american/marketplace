@@ -76,6 +76,7 @@ Break the task into discrete work items and assign to specialist agents:
 | `ability-writer` | ember-can abilities, Firestore security rules |
 | `integration-specialist` | Cross-concern wiring, service interactions, data flow |
 | `test-writer` | QUnit acceptance, integration, and unit tests |
+| `design-system-writer` | TAIA design system compliance, component selection |
 
 ## Phase 3: Coordinated Implementation
 
@@ -83,9 +84,11 @@ Spawn agents in dependency order:
 
 1. **Foundation layer**: `model-writer` (models must exist before routes/components reference them)
 2. **Backend layer**: `function-writer` + `ability-writer` (in parallel)
-3. **Frontend layer**: `route-writer` + `component-writer` (in parallel, after models exist)
+3. **Frontend layer**: `route-writer` + `component-writer` + `design-system-writer` (in parallel, after models exist)
 4. **Integration layer**: `integration-specialist` (after all pieces exist, wires them together)
 5. **Testing layer**: `test-writer` (after implementation is complete)
+
+The `design-system-writer` works alongside `component-writer` to ensure all UI uses `@trusted-american/ember` design system components instead of raw HTML/Bootstrap.
 
 Each agent receives:
 - The full task description and requirements
@@ -106,9 +109,10 @@ Every agent that produced code reviews ALL other agents' output:
 3. `component-writer` reviews: models, routes, functions, abilities, integration, tests
 4. `function-writer` reviews: models, routes, components, abilities, integration, tests
 5. `ability-writer` reviews: models, routes, components, functions, integration, tests
-6. `integration-specialist` reviews: ALL code from every other agent
-7. `test-writer` reviews: ALL code from every other agent
-8. `code-reviewer` reviews: ALL code from every agent (final quality gate)
+6. `design-system-writer` reviews: ALL frontend code for design system compliance
+7. `integration-specialist` reviews: ALL code from every other agent
+8. `test-writer` reviews: ALL code from every other agent
+9. `code-reviewer` reviews: ALL code from every agent (final quality gate)
 
 ### Review Criteria
 

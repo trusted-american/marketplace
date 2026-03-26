@@ -20,6 +20,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 | `/test <description>` | Standalone QUnit test specialist |
 | `/ability <description>` | Standalone permissions + Firestore rules specialist |
 | `/integration <description>` | Cross-concern integration analysis and wiring |
+| `/design-system <description>` | TAIA design system component specialist |
 | `/review [files]` | Round-robin review of all changes by every specialist agent |
 
 ## Agents
@@ -34,6 +35,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 | `test-writer` | Red | QUnit acceptance, integration, and unit tests |
 | `ability-writer` | Yellow | ember-can abilities + Firestore security rules |
 | `integration-specialist` | Blue | Cross-concern wiring and data flow verification |
+| `design-system-writer` | Green | TAIA design system compliance, component selection |
 | `code-reviewer` | Red | Final quality gate — conventions, security, performance |
 
 ## Pipeline
@@ -43,7 +45,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 2. INVESTIGATION   Read existing A3 code for patterns and context
 3. DECOMPOSITION   Break task into work items per specialist
 4. IMPLEMENTATION  Agents write code in dependency order:
-                     Models → Functions + Abilities → Routes + Components → Integration → Tests
+                     Models → Functions + Abilities → Routes + Components + Design System → Integration → Tests
 5. ROUND-ROBIN     Every agent reviews every other agent's output
 6. ITERATION       Fix issues until ALL agents vote APPROVE
 7. DELIVERY        Present file manifest, write to repo
@@ -70,6 +72,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 | `ember-addons` | All Ember addons used in A3 |
 | `third-party-integrations` | Stripe, Mailgun, PandaDoc, Algolia, HubSpot, OpenAI |
 | `ui-addons` | PDF, CSV, Excel, signatures, document preview |
+| `taia-design-system` | All 88+ Ember GTS components, tokens, helpers, modifiers |
 | `build-system` | Embroider, Vite, TypeScript, PWA |
 
 ## Templates
