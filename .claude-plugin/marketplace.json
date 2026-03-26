@@ -6,9 +6,36 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-03-24T23:42:34.293Z"
+    "lastUpdated": "2026-03-26T20:28:22.905Z"
   },
   "plugins": [
+    {
+      "name": "a3-plugin",
+      "source": "./plugins/a3-plugin",
+      "description": "Fullstack development agent for the A3 platform — orchestrates Ember.js, Firebase/Firestore, and GCP Cloud Functions with deep codebase knowledge, round-robin review, and GitHub-authenticated access control",
+      "version": "0.1.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
+      },
+      "license": "MIT",
+      "keywords": [
+        "a3",
+        "ember",
+        "firebase",
+        "firestore",
+        "gcp",
+        "cloud-functions",
+        "fullstack",
+        "glimmer",
+        "gts",
+        "warp-drive",
+        "qunit",
+        "tailwind",
+        "orchestration",
+        "code-generation",
+        "insurance"
+      ]
+    },
     {
       "name": "playwright",
       "source": "./plugins/playwright",
