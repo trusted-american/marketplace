@@ -1,0 +1,33 @@
+{
+  "name": "reverse-engineer",
+  "version": "1.0.0",
+  "description": "Multi-agent reverse engineering system with 10 specialized agents, 3 commands, and continuous fidelity assurance. Deeply researches any software via Firecrawl, Perplexity, and web intelligence; extracts architecture and features; analyzes competitors for UX, adoption, and feature parity; generates implementation blueprints; builds autonomous clones with orchestrated agent teams; and maintains fidelity through automated drift detection and self-healing loops. 3 commands, 10 agents, 1 skill, 4 templates.",
+  "author": {
+    "name": "Trusted American Insurance Agency"
+  },
+  "license": "MIT",
+  "keywords": [
+    "reverse-engineering",
+    "software-analysis",
+    "firecrawl",
+    "perplexity",
+    "deep-research",
+    "osint",
+    "architecture-extraction",
+    "feature-cataloging",
+    "competitive-analysis",
+    "competitive-intelligence",
+    "blueprint",
+    "autonomous-build",
+    "multi-agent",
+    "orchestration",
+    "drift-detection",
+    "self-healing",
+    "fidelity-assurance",
+    "web-research",
+    "ux-analysis",
+    "software-reconstruction",
+    "black-box-analysis",
+    "context-efficiency"
+  ]
+}
