@@ -1,0 +1,30 @@
+{
+  "hooks": [
+    {
+      "event": "post-tool-use",
+      "description": "After any Write or Edit tool call during a reverse-engineer build phase, check if the modified file deviates from the blueprint's specifications. Logs drift warnings to .reverse-engineer/build-log.md for the drift-detector to process later.",
+      "matcher": {
+        "tool_names": ["Write", "Edit"]
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "command": "if [ -f .reverse-engineer/blueprint.md ] && [ -f .reverse-engineer/build-log.md ]; then echo \"[$(date -Iseconds)] File modified: $CLAUDE_TOOL_ARG_FILE_PATH\" >> .reverse-engineer/build-log.md; fi"
+        }
+      ]
+    },
+    {
+      "event": "post-tool-use",
+      "description": "After Bash tool runs during build phases, capture command outputs that may indicate build errors, test failures, or lint issues. Appends to build log for self-healer to process.",
+      "matcher": {
+        "tool_names": ["Bash"]
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "command": "if [ -f .reverse-engineer/build-log.md ]; then echo \"[$(date -Iseconds)] Shell command executed during build\" >> .reverse-engineer/build-log.md; fi"
+        }
+      ]
+    }
+  ]
+}

@@ -6,9 +6,41 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-03-25T01:28:58.889Z"
+    "lastUpdated": "2026-03-26T02:42:35.842Z"
   },
   "plugins": [
+    {
+      "name": "algorithm-expert",
+      "source": "./plugins/algorithm-expert",
+      "description": "Multi-agent algorithm intelligence system that analyzes codebases for optimization opportunities, researches cutting-edge algorithms via deep web research, identifies complexity bottlenecks, and applies superior data structures and algorithms with before/after benchmarking. 3 commands, 7 agents, 1 skill, 3 templates.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
+      },
+      "license": "MIT",
+      "keywords": [
+        "algorithms",
+        "data-structures",
+        "optimization",
+        "complexity-analysis",
+        "big-o",
+        "performance",
+        "benchmarking",
+        "graph-algorithms",
+        "sorting",
+        "searching",
+        "dynamic-programming",
+        "greedy",
+        "divide-and-conquer",
+        "machine-learning-algorithms",
+        "computational-geometry",
+        "string-algorithms",
+        "probabilistic",
+        "approximation",
+        "research",
+        "codebase-analysis"
+      ]
+    },
     {
       "name": "playwright",
       "source": "./plugins/playwright",
@@ -24,6 +56,40 @@
         "e2e",
         "test-generation",
         "quality-assurance"
+      ]
+    },
+    {
+      "name": "reverse-engineer",
+      "source": "./plugins/reverse-engineer",
+      "description": "Multi-agent reverse engineering system with 10 specialized agents, 3 commands, and continuous fidelity assurance. Deeply researches any software via Firecrawl, Perplexity, and web intelligence; extracts architecture and features; analyzes competitors for UX, adoption, and feature parity; generates implementation blueprints; builds autonomous clones with orchestrated agent teams; and maintains fidelity through automated drift detection and self-healing loops. 3 commands, 10 agents, 1 skill, 4 templates.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
+      },
+      "license": "MIT",
+      "keywords": [
+        "reverse-engineering",
+        "software-analysis",
+        "firecrawl",
+        "perplexity",
+        "deep-research",
+        "osint",
+        "architecture-extraction",
+        "feature-cataloging",
+        "competitive-analysis",
+        "competitive-intelligence",
+        "blueprint",
+        "autonomous-build",
+        "multi-agent",
+        "orchestration",
+        "drift-detection",
+        "self-healing",
+        "fidelity-assurance",
+        "web-research",
+        "ux-analysis",
+        "software-reconstruction",
+        "black-box-analysis",
+        "context-efficiency"
       ]
     },
     {

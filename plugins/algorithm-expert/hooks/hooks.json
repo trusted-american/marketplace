@@ -1,0 +1,17 @@
+{
+  "hooks": [
+    {
+      "event": "post-tool-use",
+      "description": "After Write or Edit tool calls during algorithm optimization, log the modification to the optimization audit trail at .algorithm-expert/audit-log.md for traceability.",
+      "matcher": {
+        "tool_names": ["Write", "Edit"]
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "command": "if [ -d .algorithm-expert ]; then echo \"[$(date -Iseconds)] Modified: $CLAUDE_TOOL_ARG_FILE_PATH\" >> .algorithm-expert/audit-log.md; fi"
+        }
+      ]
+    }
+  ]
+}
