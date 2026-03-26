@@ -77,16 +77,20 @@ Break the task into discrete work items and assign to specialist agents:
 | `integration-specialist` | Cross-concern wiring, service interactions, data flow |
 | `test-writer` | QUnit acceptance, integration, and unit tests |
 | `design-system-writer` | TAIA design system compliance, component selection |
+| `example-finder` | Finds real A3 examples and verifies convention compliance |
 
 ## Phase 3: Coordinated Implementation
 
 Spawn agents in dependency order:
 
+0. **Discovery layer**: `example-finder` (runs FIRST — finds existing patterns for every agent to reference)
 1. **Foundation layer**: `model-writer` (models must exist before routes/components reference them)
 2. **Backend layer**: `function-writer` + `ability-writer` (in parallel)
 3. **Frontend layer**: `route-writer` + `component-writer` + `design-system-writer` (in parallel, after models exist)
 4. **Integration layer**: `integration-specialist` (after all pieces exist, wires them together)
 5. **Testing layer**: `test-writer` (after implementation is complete)
+
+The `example-finder` runs before all other agents. It searches the A3 codebase for similar existing features, counts how many files follow each pattern, and provides concrete examples that every downstream agent uses as their convention reference. No agent writes code without first receiving the example-finder's report.
 
 The `design-system-writer` works alongside `component-writer` to ensure all UI uses `@trusted-american/ember` design system components instead of raw HTML/Bootstrap.
 
@@ -110,9 +114,10 @@ Every agent that produced code reviews ALL other agents' output:
 4. `function-writer` reviews: models, routes, components, abilities, integration, tests
 5. `ability-writer` reviews: models, routes, components, functions, integration, tests
 6. `design-system-writer` reviews: ALL frontend code for design system compliance
-7. `integration-specialist` reviews: ALL code from every other agent
-8. `test-writer` reviews: ALL code from every other agent
-9. `code-reviewer` reviews: ALL code from every agent (final quality gate)
+7. `example-finder` reviews: ALL code for convention compliance against the actual A3 codebase
+8. `integration-specialist` reviews: ALL code from every other agent
+9. `test-writer` reviews: ALL code from every other agent
+10. `code-reviewer` reviews: ALL code from every agent (final quality gate)
 
 ### Review Criteria
 

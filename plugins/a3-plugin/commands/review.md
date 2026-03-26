@@ -45,9 +45,10 @@ Spawn ALL specialist agents in parallel, each reviewing from their domain:
 4. **function-writer** — Reviews all backend code (Cloud Functions)
 5. **ability-writer** — Reviews all security code (abilities, Firestore rules)
 6. **design-system-writer** — Reviews ALL frontend code for TAIA design system compliance
-7. **integration-specialist** — Reviews ALL code for cross-concern integration
-8. **test-writer** — Reviews ALL code for test coverage adequacy
-9. **code-reviewer** — Holistic review across all dimensions
+7. **example-finder** — Reviews ALL code for convention compliance against the actual A3 codebase
+8. **integration-specialist** — Reviews ALL code for cross-concern integration
+9. **test-writer** — Reviews ALL code for test coverage adequacy
+10. **code-reviewer** — Holistic review across all dimensions
 
 Each agent receives the complete set of changed files and the context of what they're reviewing.
 
@@ -63,11 +64,12 @@ Review Summary:
 ├── function-writer:         APPROVE
 ├── ability-writer:          BLOCK (security issue)
 ├── design-system-writer:    REQUEST_CHANGES (raw HTML should use DS components)
+├── example-finder:          REQUEST_CHANGES (naming deviates from 90% of A3 models)
 ├── integration-specialist:  REQUEST_CHANGES (1 issue)
 ├── test-writer:             REQUEST_CHANGES (missing tests)
 └── code-reviewer:           REQUEST_CHANGES (conventions)
 
-Overall: NOT APPROVED (1 BLOCK, 4 REQUEST_CHANGES)
+Overall: NOT APPROVED (1 BLOCK, 5 REQUEST_CHANGES)
 ```
 
 ## Step 4: Present Findings
@@ -99,7 +101,7 @@ If the user wants to fix themselves:
 
 ## Critical Rules
 
-- NEVER skip any reviewer — ALL 9 agents must review
+- NEVER skip any reviewer — ALL 10 agents must review
 - Present findings honestly — don't minimize issues
 - BLOCK verdicts cannot be overridden without fixing the issue
 - The integration-specialist's findings are especially important

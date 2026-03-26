@@ -21,6 +21,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 | `/ability <description>` | Standalone permissions + Firestore rules specialist |
 | `/integration <description>` | Cross-concern integration analysis and wiring |
 | `/design-system <description>` | TAIA design system component specialist |
+| `/example <what-to-find>` | Find real examples and conventions in the A3 codebase |
 | `/review [files]` | Round-robin review of all changes by every specialist agent |
 
 ## Agents
@@ -36,15 +37,16 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 | `ability-writer` | Yellow | ember-can abilities + Firestore security rules |
 | `integration-specialist` | Blue | Cross-concern wiring and data flow verification |
 | `design-system-writer` | Green | TAIA design system compliance, component selection |
+| `example-finder` | Cyan | Finds real A3 examples, verifies convention compliance with evidence |
 | `code-reviewer` | Red | Final quality gate — conventions, security, performance |
 
 ## Pipeline
 
 ```
 1. REQUIREMENTS    User describes task → orchestrator asks deep questions
-2. INVESTIGATION   Read existing A3 code for patterns and context
+2. DISCOVERY       example-finder searches A3 for similar patterns, counts conventions
 3. DECOMPOSITION   Break task into work items per specialist
-4. IMPLEMENTATION  Agents write code in dependency order:
+4. IMPLEMENTATION  Agents write code in dependency order (grounded in real examples):
                      Models → Functions + Abilities → Routes + Components + Design System → Integration → Tests
 5. ROUND-ROBIN     Every agent reviews every other agent's output
 6. ITERATION       Fix issues until ALL agents vote APPROVE
