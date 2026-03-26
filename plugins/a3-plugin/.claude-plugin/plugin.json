@@ -1,0 +1,26 @@
+{
+  "name": "a3-plugin",
+  "version": "0.1.0",
+  "description": "Fullstack development agent for the A3 platform — orchestrates Ember.js, Firebase/Firestore, and GCP Cloud Functions with deep codebase knowledge, round-robin review, and GitHub-authenticated access control",
+  "author": {
+    "name": "Trusted American Insurance Agency"
+  },
+  "license": "MIT",
+  "keywords": [
+    "a3",
+    "ember",
+    "firebase",
+    "firestore",
+    "gcp",
+    "cloud-functions",
+    "fullstack",
+    "glimmer",
+    "gts",
+    "warp-drive",
+    "qunit",
+    "tailwind",
+    "orchestration",
+    "code-generation",
+    "insurance"
+  ]
+}
