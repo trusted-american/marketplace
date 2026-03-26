@@ -1,0 +1,31 @@
+{
+  "name": "algorithm-expert",
+  "version": "1.0.0",
+  "description": "Multi-agent algorithm intelligence system that analyzes codebases for optimization opportunities, researches cutting-edge algorithms via deep web research, identifies complexity bottlenecks, and applies superior data structures and algorithms with before/after benchmarking. 3 commands, 7 agents, 1 skill, 3 templates.",
+  "author": {
+    "name": "Trusted American Insurance Agency"
+  },
+  "license": "MIT",
+  "keywords": [
+    "algorithms",
+    "data-structures",
+    "optimization",
+    "complexity-analysis",
+    "big-o",
+    "performance",
+    "benchmarking",
+    "graph-algorithms",
+    "sorting",
+    "searching",
+    "dynamic-programming",
+    "greedy",
+    "divide-and-conquer",
+    "machine-learning-algorithms",
+    "computational-geometry",
+    "string-algorithms",
+    "probabilistic",
+    "approximation",
+    "research",
+    "codebase-analysis"
+  ]
+}

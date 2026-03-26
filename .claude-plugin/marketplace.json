@@ -6,9 +6,41 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-03-26T02:25:15.810Z"
+    "lastUpdated": "2026-03-26T02:42:35.842Z"
   },
   "plugins": [
+    {
+      "name": "algorithm-expert",
+      "source": "./plugins/algorithm-expert",
+      "description": "Multi-agent algorithm intelligence system that analyzes codebases for optimization opportunities, researches cutting-edge algorithms via deep web research, identifies complexity bottlenecks, and applies superior data structures and algorithms with before/after benchmarking. 3 commands, 7 agents, 1 skill, 3 templates.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
+      },
+      "license": "MIT",
+      "keywords": [
+        "algorithms",
+        "data-structures",
+        "optimization",
+        "complexity-analysis",
+        "big-o",
+        "performance",
+        "benchmarking",
+        "graph-algorithms",
+        "sorting",
+        "searching",
+        "dynamic-programming",
+        "greedy",
+        "divide-and-conquer",
+        "machine-learning-algorithms",
+        "computational-geometry",
+        "string-algorithms",
+        "probabilistic",
+        "approximation",
+        "research",
+        "codebase-analysis"
+      ]
+    },
     {
       "name": "playwright",
       "source": "./plugins/playwright",
