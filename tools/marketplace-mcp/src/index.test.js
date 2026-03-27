@@ -325,6 +325,17 @@ describe("generateRegistry", () => {
     expect(warnings.some((w) => w.includes("No .gitmodules entry"))).toBe(true);
   });
 
+  it("warns only once per repo when multiple plugins have no .gitmodules entry", async () => {
+    // No .gitmodules file — repo has two plugins
+    await createCommunityPlugin(communityDir, "unknown-repo", "plugin-alpha");
+    await createCommunityPlugin(communityDir, "unknown-repo", "plugin-beta");
+    const { warnings } = await generateRegistry(pluginsDir, communityDir);
+    const submoduleWarnings = warnings.filter((w) =>
+      w.includes('No .gitmodules entry for "community/unknown-repo"')
+    );
+    expect(submoduleWarnings).toHaveLength(1);
+  });
+
   it("ignores community repos without a plugins/ subdirectory", async () => {
     // Create a repo dir without plugins/
     await fs.mkdir(path.join(communityDir, "empty-repo"), { recursive: true });
