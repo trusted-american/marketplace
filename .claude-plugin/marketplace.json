@@ -6,7 +6,7 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-03-26T20:28:22.905Z"
+    "lastUpdated": "2026-03-27T17:41:36.519Z"
   },
   "plugins": [
     {
@@ -37,6 +37,38 @@
       ]
     },
     {
+      "name": "algorithm-expert",
+      "source": "./plugins/algorithm-expert",
+      "description": "Multi-agent algorithm intelligence system that analyzes codebases for optimization opportunities, researches cutting-edge algorithms via deep web research, identifies complexity bottlenecks, and applies superior data structures and algorithms with before/after benchmarking. 3 commands, 7 agents, 1 skill, 3 templates.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
+      },
+      "license": "MIT",
+      "keywords": [
+        "algorithms",
+        "data-structures",
+        "optimization",
+        "complexity-analysis",
+        "big-o",
+        "performance",
+        "benchmarking",
+        "graph-algorithms",
+        "sorting",
+        "searching",
+        "dynamic-programming",
+        "greedy",
+        "divide-and-conquer",
+        "machine-learning-algorithms",
+        "computational-geometry",
+        "string-algorithms",
+        "probabilistic",
+        "approximation",
+        "research",
+        "codebase-analysis"
+      ]
+    },
+    {
       "name": "playwright",
       "source": "./plugins/playwright",
       "description": "Multi-agent Playwright test generation system that creates thorough, production-ready test suites one page at a time",
@@ -54,8 +86,46 @@
       ]
     },
     {
+      "name": "reverse-engineer",
+      "source": "./plugins/reverse-engineer",
+      "description": "Multi-agent reverse engineering system with 10 specialized agents, 3 commands, and continuous fidelity assurance. Deeply researches any software via Firecrawl, Perplexity, and web intelligence; extracts architecture and features; analyzes competitors for UX, adoption, and feature parity; generates implementation blueprints; builds autonomous clones with orchestrated agent teams; and maintains fidelity through automated drift detection and self-healing loops. 3 commands, 10 agents, 1 skill, 4 templates.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Trusted American Insurance Agency"
+      },
+      "license": "MIT",
+      "keywords": [
+        "reverse-engineering",
+        "software-analysis",
+        "firecrawl",
+        "perplexity",
+        "deep-research",
+        "osint",
+        "architecture-extraction",
+        "feature-cataloging",
+        "competitive-analysis",
+        "competitive-intelligence",
+        "blueprint",
+        "autonomous-build",
+        "multi-agent",
+        "orchestration",
+        "drift-detection",
+        "self-healing",
+        "fidelity-assurance",
+        "web-research",
+        "ux-analysis",
+        "software-reconstruction",
+        "black-box-analysis",
+        "context-efficiency"
+      ]
+    },
+    {
       "name": "aws-eks-helm-keycloak",
-      "source": "./community/claude/plugins/aws-eks-helm-keycloak",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/aws-eks-helm-keycloak"
+      },
       "description": "The Conduit-Artisan Hybrid - AWS EKS deployments with Helm, Keycloak authentication, and Harness CI/CD. Combines pipeline excellence with developer velocity.",
       "version": "1.0.0",
       "author": {
@@ -80,7 +150,11 @@
     },
     {
       "name": "claude-code-expert",
-      "source": "./community/claude/plugins/claude-code-expert",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/claude-code-expert"
+      },
       "description": "High-intelligence Claude Code copilot with deep code reasoning, evidence-driven planning, orchestration-first execution, model routing, context budgeting, CI/CD integration, enterprise security, plugin development, prompt engineering, performance profiling, agent teams, interactive tutorials, and a queryable 10-tool MCP documentation server.",
       "version": "6.0.0",
       "author": {
@@ -136,7 +210,11 @@
     },
     {
       "name": "claude-code-templating",
-      "source": "./community/claude/plugins/claude-code-templating-plugin",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/claude-code-templating-plugin"
+      },
       "description": "Universal templating and Harness expert plugin for Claude Code - enables fully autonomous project generation, pipeline creation, and deployment automation through a unified template interface. Supports Handlebars, Cookiecutter, Copier, Maven archetypes, and Harness pipelines. 5 commands, 6 agents, 3 skills.",
       "version": "1.0.0",
       "author": {
@@ -161,7 +239,11 @@
     },
     {
       "name": "cowork-marketplace",
-      "source": "./community/claude/plugins/cowork-marketplace",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/cowork-marketplace"
+      },
       "description": "Browse, install, and manage cowork marketplace items backed by real plugin agents, skills, and commands",
       "version": "1.0.0",
       "author": {
@@ -182,7 +264,11 @@
     },
     {
       "name": "deployment-pipeline",
-      "source": "./community/claude/plugins/deployment-pipeline",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/deployment-pipeline"
+      },
       "description": "Harness CD integration pipeline with state-machine workflow orchestration",
       "version": "1.0.0",
       "author": {
@@ -203,7 +289,11 @@
     },
     {
       "name": "drawio-diagramming",
-      "source": "./community/claude/plugins/drawio-diagramming",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/drawio-diagramming"
+      },
       "description": "Intelligent draw.io diagramming plugin with AI-powered diagram generation, multi-platform embedding (GitHub, Confluence, Azure DevOps, Notion, Teams, Harness), conditional formatting, live data binding, and MCP server integration for programmatic diagram creation and management.",
       "version": "1.0.0",
       "author": {
@@ -255,7 +345,11 @@
     },
     {
       "name": "exec-automator",
-      "source": "./community/claude/plugins/exec-automator",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/exec-automator"
+      },
       "description": "Genesis (Forerunner) - AI-Powered Executive Director Automation Platform. Analyze organizational responsibilities, score automation potential with 6-factor algorithm, generate LangGraph workflows, and deploy 11 specialized agents for trade associations and nonprofits.",
       "version": "1.0.0",
       "author": {
@@ -278,7 +372,11 @@
     },
     {
       "name": "fastapi-backend",
-      "source": "./community/claude/plugins/fastapi-backend",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/fastapi-backend"
+      },
       "description": "Comprehensive FastAPI backend development plugin with MongoDB/Beanie, Keycloak auth, Docker/K8s deployment, background tasks, caching, observability, and real-time features",
       "version": "0.1.0",
       "author": {
@@ -306,7 +404,11 @@
     },
     {
       "name": "frontend-design-system",
-      "source": "./community/claude/plugins/frontend-design-system",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/frontend-design-system"
+      },
       "description": "263+ design styles with multi-tenant Keycloak theming for AI-powered frontend development",
       "version": "1.0.0",
       "author": {
@@ -328,7 +430,11 @@
     },
     {
       "name": "fullstack-iac",
-      "source": "./community/claude/plugins/fullstack-iac",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/fullstack-iac"
+      },
       "description": "Zenith (Forerunner) - Complete full-stack development and infrastructure automation. FastAPI, React/Vite, Ansible, Terraform, Kubernetes with production-ready templates and CI/CD pipelines.",
       "version": "1.0.0",
       "author": {
@@ -353,7 +459,11 @@
     },
     {
       "name": "home-assistant-architect",
-      "source": "./community/claude/plugins/home-assistant-architect",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/home-assistant-architect"
+      },
       "description": "Complete Home Assistant platform with frontend design, energy management, cameras, sensors, local LLM integration, and Ubuntu server deployment",
       "version": "2.0.0",
       "author": {
@@ -374,7 +484,11 @@
     },
     {
       "name": "jira-orchestrator",
-      "source": "./community/claude/plugins/jira-orchestrator",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/jira-orchestrator"
+      },
       "description": "Enterprise Jira orchestration with 81 agents, 16 teams, 46 commands, 11 skills. Features Atlassian MCP OAuth, Harness integration, Neon PostgreSQL, Redis caching, Temporal workflows, and structured reasoning frameworks.",
       "version": "7.5.0",
       "author": {
@@ -404,7 +518,11 @@
     },
     {
       "name": "lobbi-platform-manager",
-      "source": "./community/claude/plugins/lobbi-platform-manager",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-platform-manager"
+      },
       "description": "Streamline development on the-lobbi/keycloak-alpha with Keycloak management, service orchestration, and test generation",
       "version": "1.0.0",
       "author": {
@@ -425,7 +543,11 @@
     },
     {
       "name": "marketplace-pro",
-      "source": "./community/claude/plugins/marketplace-pro",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/marketplace-pro"
+      },
       "description": "Advanced plugin marketplace platform with intent-based composition, supply chain security, contextual intelligence, dev studio hot-reload, and federated registry protocol. Transforms the marketplace from a package manager into an enterprise orchestration platform.",
       "version": "1.0.0",
       "author": {
@@ -452,7 +574,11 @@
     },
     {
       "name": "react-animation-studio",
-      "source": "./community/claude/plugins/react-animation-studio",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/react-animation-studio"
+      },
       "description": "Create beautiful, performant web animations for React and TypeScript applications. Includes background effects, text animations, 3D transforms, creative visual effects, Framer Motion, GSAP, and more.",
       "version": "1.1.0",
       "author": {
@@ -485,7 +611,11 @@
     },
     {
       "name": "team-accelerator",
-      "source": "./community/claude/plugins/team-accelerator",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/team-accelerator"
+      },
       "description": "Enterprise development toolkit for teams - DevOps, code quality, integrations, workflow automation, documentation, and performance optimization across multi-cloud and full-stack platforms",
       "version": "1.0.0",
       "author": {
@@ -511,7 +641,11 @@
     },
     {
       "name": "tvs-microsoft-deploy",
-      "source": "./community/claude/plugins/tvs-microsoft-deploy",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/tvs-microsoft-deploy"
+      },
       "description": "Consul - Enterprise Microsoft ecosystem orchestrator for TVS (Trusted Virtual Solutions) multi-entity multi-tenant deployment. 19 agents, 18 commands, 17 skills, 14 hooks, 5 workflows. MCP server for Graph API, Dataverse, Fabric, and Planner.",
       "version": "1.1.0",
       "author": {
@@ -551,7 +685,11 @@
     },
     {
       "name": "upgrade-suggestion",
-      "source": "./community/claude/plugins/upgrade-suggestion",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/upgrade-suggestion"
+      },
       "description": "AI-powered upgrade intelligence platform. Multi-agent council analyzes your codebase across 8 dimensions, produces confidence-scored suggestions with visual impact heatmaps, upgrade roadmaps, framework-specific deep dives, and before/after impact previews. Features innovation radar, tech debt forecasting, and coordinated upgrade bundles.",
       "version": "2.0.0",
       "author": {

@@ -10,6 +10,7 @@ import {
   collectComponents,
   generateRegistry,
   writeRegistry,
+  parseGitmodules,
   COMPONENT_TYPES,
 } from "../../lib/registry.js";
 
@@ -99,6 +100,36 @@ describe("fileExists", () => {
 
   it("returns false for non-existing file", async () => {
     expect(await fileExists(path.join(tmpDir, "nope.txt"))).toBe(false);
+  });
+});
+
+// ── Shared module: parseGitmodules ───────────────────────────────────────────
+
+describe("parseGitmodules", () => {
+  it("parses submodule path and URL mappings", async () => {
+    await fs.writeFile(
+      path.join(tmpDir, ".gitmodules"),
+      `[submodule "community/claude"]\n\tpath = community/claude\n\turl = https://github.com/markus41/claude\n`
+    );
+    const mapping = await parseGitmodules(tmpDir);
+    expect(mapping).toEqual({
+      "community/claude": "https://github.com/markus41/claude",
+    });
+  });
+
+  it("parses multiple submodules", async () => {
+    await fs.writeFile(
+      path.join(tmpDir, ".gitmodules"),
+      `[submodule "community/repo-a"]\n\tpath = community/repo-a\n\turl = https://github.com/org/repo-a\n\n[submodule "community/repo-b"]\n\tpath = community/repo-b\n\turl = https://github.com/org/repo-b\n`
+    );
+    const mapping = await parseGitmodules(tmpDir);
+    expect(mapping["community/repo-a"]).toBe("https://github.com/org/repo-a");
+    expect(mapping["community/repo-b"]).toBe("https://github.com/org/repo-b");
+  });
+
+  it("returns empty object when .gitmodules does not exist", async () => {
+    const mapping = await parseGitmodules(tmpDir);
+    expect(mapping).toEqual({});
   });
 });
 
@@ -243,8 +274,7 @@ describe("generateRegistry", () => {
     await createValidPlugin(pluginsDir, "dupe-plugin", { name: "same-name" });
     await createCommunityPlugin(communityDir, "upstream-repo", "other-dir", { name: "same-name" });
     const { plugins, warnings } = await generateRegistry(pluginsDir, communityDir);
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('Duplicate plugin name "same-name"');
+    expect(warnings.some((w) => w.includes('Duplicate plugin name "same-name"'))).toBe(true);
     // Second one wins
     expect(plugins["same-name"].category).toBe("community/upstream-repo/plugins");
   });
@@ -274,6 +304,27 @@ describe("generateRegistry", () => {
     expect(plugins["plugin-y"].path).toBe("community/repo-b/plugins/plugin-y");
   });
 
+  it("attaches upstream info to community plugins when .gitmodules exists", async () => {
+    await fs.writeFile(
+      path.join(tmpDir, ".gitmodules"),
+      `[submodule "community/upstream-repo"]\n\tpath = community/upstream-repo\n\turl = https://github.com/org/upstream-repo\n`
+    );
+    await createCommunityPlugin(communityDir, "upstream-repo", "my-plugin");
+    const { plugins } = await generateRegistry(pluginsDir, communityDir);
+    expect(plugins["my-plugin"].upstream).toEqual({
+      url: "https://github.com/org/upstream-repo",
+      path: "plugins/my-plugin",
+    });
+  });
+
+  it("warns when community plugin has no .gitmodules entry", async () => {
+    // No .gitmodules file
+    await createCommunityPlugin(communityDir, "unknown-repo", "orphan-plugin");
+    const { plugins, warnings } = await generateRegistry(pluginsDir, communityDir);
+    expect(plugins["orphan-plugin"].upstream).toBeUndefined();
+    expect(warnings.some((w) => w.includes("No .gitmodules entry"))).toBe(true);
+  });
+
   it("ignores community repos without a plugins/ subdirectory", async () => {
     // Create a repo dir without plugins/
     await fs.mkdir(path.join(communityDir, "empty-repo"), { recursive: true });
@@ -282,7 +333,32 @@ describe("generateRegistry", () => {
     expect(Object.keys(plugins)).toHaveLength(0);
   });
 
-  it("generates correct source path for community plugins in writeRegistry", async () => {
+  it("generates git-subdir source for community plugins with upstream info", async () => {
+    const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
+    const plugins = {
+      "my-community-plugin": {
+        name: "my-community-plugin",
+        version: "1.0.0",
+        description: "A community plugin",
+        category: "community/claude/plugins",
+        path: "community/claude/plugins/my-community-plugin",
+        components: {},
+        upstream: {
+          url: "https://github.com/markus41/claude",
+          path: "plugins/my-community-plugin",
+        },
+      },
+    };
+    await writeRegistry(output, plugins);
+    const data = JSON.parse(await fs.readFile(output, "utf-8"));
+    expect(data.plugins[0].source).toEqual({
+      source: "git-subdir",
+      url: "https://github.com/markus41/claude",
+      path: "plugins/my-community-plugin",
+    });
+  });
+
+  it("falls back to relative path for community plugins without upstream info", async () => {
     const output = path.join(tmpDir, ".claude-plugin", "marketplace.json");
     const plugins = {
       "my-community-plugin": {
