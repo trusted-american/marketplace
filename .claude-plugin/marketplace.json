@@ -6,7 +6,7 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-03-27T17:41:36.519Z"
+    "lastUpdated": "2026-03-30T21:54:02.153Z"
   },
   "plugins": [
     {
@@ -718,6 +718,105 @@
         "multi-agent"
       ],
       "repository": "https://github.com/markus41/claude"
+    },
+    {
+      "name": "microsoft-azure-mcp",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/azure"
+      },
+      "description": "Inspect subscriptions, resource groups, and resources via MCP.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      }
+    },
+    {
+      "name": "microsoft-docs-mcp",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/docs"
+      },
+      "description": "Search and fetch official Microsoft documentation via the Learn MCP server.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      }
+    },
+    {
+      "name": "domain-business-name-finder",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/domain-business-name-finder"
+      },
+      "description": "Brainstorm business names and check domain availability across popular TLDs using Firecrawl, Perplexity, WHOIS, and Domain Search MCP servers",
+      "version": "0.2.0",
+      "author": {
+        "name": "markus41"
+      },
+      "license": "MIT",
+      "keywords": [
+        "domain",
+        "business",
+        "naming",
+        "branding",
+        "startup"
+      ]
+    },
+    {
+      "name": "microsoft-excel-mcp",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/excel"
+      },
+      "description": "Read and update workbooks, worksheets, ranges, and tables via MCP.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      }
+    },
+    {
+      "name": "microsoft-outlook-mcp",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/outlook"
+      },
+      "description": "Send email and manage inbox/calendar tasks via MCP.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      }
+    },
+    {
+      "name": "microsoft-sharepoint-mcp",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/sharepoint"
+      },
+      "description": "Browse and transfer SharePoint files through MCP tools.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      }
+    },
+    {
+      "name": "microsoft-teams-mcp",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/Claude-m",
+        "path": "plugins/teams"
+      },
+      "description": "Send messages, create meetings, and manage Teams channels via MCP.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      }
     }
   ]
 }
