@@ -57,3 +57,54 @@ jobs:
             --head "$BRANCH"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-claude-m:
+    name: Update community/claude-m submodule
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Pull latest upstream and open PR if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git submodule update --remote community/claude-m
+
+          if git diff --quiet community/claude-m; then
+            echo "Submodule already up to date"
+            exit 0
+          fi
+
+          OLD=$(git diff community/claude-m | grep -oP '(?<=^-Subproject commit )\w+' || echo "unknown")
+          NEW=$(git diff community/claude-m | grep -oP '(?<=^\+Subproject commit )\w+' || echo "unknown")
+
+          BRANCH="chore/sync-community-claude-m-$(date +%s)"
+          git checkout -b "$BRANCH"
+          git add community/claude-m
+          git commit -m "chore: sync community/claude-m submodule [skip ci]"
+          git push -u origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: sync community/claude-m submodule" \
+            --body "$(cat <<EOF
+          Updates \`community/claude-m\` submodule to latest upstream.
+
+          - **Old:** \`${OLD:0:10}\`
+          - **New:** \`${NEW:0:10}\`
+          - **Upstream:** https://github.com/markus41/Claude-m
+
+          Once merged, the \`update-registry\` CI job will regenerate \`marketplace.json\` automatically.
+          EOF
+          )" \
+            --base main \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
