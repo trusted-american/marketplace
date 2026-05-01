@@ -1,0 +1,28 @@
+{
+  "name": "ensenador",
+  "version": "1.0.0",
+  "description": "enseñador — a Socratic-method coding mentor for Claude Code. Refuses to write code for you; instead asks pointed questions, surfaces authoritative resources, and gates progress until you reach the insight yourself. 3 commands (/map, /guidance, /validate), 3 agents, 1 skill.",
+  "author": {
+    "name": "Trusted American Insurance Agency"
+  },
+  "license": "MIT",
+  "keywords": [
+    "learning",
+    "teaching",
+    "socratic",
+    "mentorship",
+    "education",
+    "pedagogy",
+    "self-directed-learning",
+    "code-review",
+    "feedback",
+    "scaffolding",
+    "research",
+    "documentation",
+    "context7",
+    "deliberate-practice",
+    "bloom-taxonomy",
+    "active-recall",
+    "productive-struggle"
+  ]
+}
