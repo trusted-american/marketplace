@@ -12,8 +12,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          submodules: true
+        # NOTE: don't pass `submodules: true` — actions/checkout's credential
+        # persistence step runs `git submodule foreach --recursive` unconditionally,
+        # which fails on community/claude's stray nested gitlink (no .gitmodules
+        # entry). Init community/claude manually below and scrub the bad gitlink.
+
+      - name: Init community/claude
+        run: |
+          git submodule update --init community/claude
+          # Scrub stray nested gitlink (no .gitmodules entry) so any later
+          # `git submodule foreach --recursive` (e.g. checkout's post-job cleanup)
+          # doesn't trip over it.
+          git -C community/claude rm --cached -r --ignore-unmatch .claude/worktrees
 
       - name: Check required files
         run: |
@@ -97,8 +107,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          submodules: true
+        # See note in `validate` job — submodules handled manually.
+
+      - name: Init community/claude
+        run: |
+          git submodule update --init community/claude
+          git -C community/claude rm --cached -r --ignore-unmatch .claude/worktrees
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -143,8 +157,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          submodules: true
+        # See note in `validate` job — submodules handled manually.
+
+      - name: Init community/claude
+        run: |
+          git submodule update --init community/claude
+          git -C community/claude rm --cached -r --ignore-unmatch .claude/worktrees
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:

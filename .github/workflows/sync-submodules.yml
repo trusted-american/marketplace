@@ -17,15 +17,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          submodules: true
+        # NOTE: don't pass `submodules: true` — actions/checkout's credential
+        # persistence step runs `git submodule foreach --recursive` unconditionally,
+        # which fails on community/claude's stray nested gitlink (no .gitmodules
+        # entry). The script below initializes the submodule manually.
 
       - name: Pull latest upstream and open PR if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git submodule update --remote community/claude
+          git submodule update --init --remote community/claude
+          # Scrub stray nested gitlink (no .gitmodules entry) so checkout's
+          # post-job `git submodule foreach --recursive` doesn't fail.
+          git -C community/claude rm --cached -r --ignore-unmatch .claude/worktrees
 
           if git diff --quiet community/claude; then
             echo "Submodule already up to date"
