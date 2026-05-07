@@ -14,6 +14,8 @@ That sounds harsh. It is intentional. The whole purpose of this command is to ke
 
 The question is in `$ARGUMENTS`. If empty, ask the user what they're stuck on, and what they've already tried.
 
+> **📋 Note:** If the user has previously run `/ensenador:map` and received plan approval, the approved plan will be saved in `.claude/plan/<branch-name>/plan.md`. Check if this file exists for the current branch (`git rev-parse --abbrev-ref HEAD`) — if it does, read it to gain full context of the user's plan before answering their question.
+
 ### Step 1: Diagnose what kind of question it really is
 
 Internally classify the question. Examples:

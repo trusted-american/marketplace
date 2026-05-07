@@ -6,7 +6,7 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-05-01T18:21:45.254Z"
+    "lastUpdated": "2026-05-07T22:06:12.826Z"
   },
   "plugins": [
     {
@@ -156,7 +156,7 @@
         "path": "plugins/aws-eks-helm-keycloak"
       },
       "description": "The Conduit-Artisan Hybrid - AWS EKS deployments with Helm, Keycloak authentication, and Harness CI/CD. Combines pipeline excellence with developer velocity.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Golden Armada"
       },
@@ -173,7 +173,15 @@
         "authentication",
         "ci-cd",
         "gitops",
-        "developer-experience"
+        "developer-experience",
+        "agentic-patterns",
+        "prompt-chaining",
+        "multi-agent",
+        "hitl",
+        "guardrails",
+        "exception-handling",
+        "resource-aware",
+        "evaluation"
       ],
       "repository": "https://github.com/the-Lobbi/aws-eks-helm-keycloak"
     },
@@ -184,56 +192,39 @@
         "url": "https://github.com/markus41/claude",
         "path": "plugins/claude-code-expert"
       },
-      "description": "High-intelligence Claude Code copilot with deep code reasoning, evidence-driven planning, orchestration-first execution, model routing, context budgeting, CI/CD integration, enterprise security, plugin development, prompt engineering, performance profiling, agent teams, interactive tutorials, and a queryable 10-tool MCP documentation server.",
-      "version": "6.0.0",
+      "description": "Modern Claude Code second brain: 5-layer stack deploy + three-tier memory (engram + Obsidian vault + plugin rules) + 22-tool MCP reference server. 14 behavior-triggering skills, 11 single-intent commands, 18 role-scoped agents bridging engram and Obsidian.",
+      "version": "8.0.0",
       "author": {
         "name": "Markus Ahling"
       },
       "license": "MIT",
       "keywords": [
         "claude-code",
-        "documentation",
+        "second-brain",
+        "engram",
+        "obsidian",
+        "memory",
         "configuration",
         "hooks",
         "mcp",
-        "sdk",
-        "cli",
-        "ide",
-        "best-practices",
-        "debugger",
-        "troubleshooting",
-        "teams",
-        "agent-teams",
-        "subagents",
-        "settings",
-        "permissions",
-        "security",
-        "memory",
         "orchestration",
-        "audit-loop",
-        "agent-lifecycle",
-        "context-anchoring",
-        "research-routing",
-        "self-healing",
-        "cost-optimization",
-        "council",
-        "multi-agent-review",
+        "agentic-patterns",
         "deep-code-intelligence",
-        "evidence-driven-planning",
-        "repo-fingerprinting",
-        "root-cause-analysis",
-        "design-review",
-        "ci-cd",
-        "github-actions",
+        "evidence-driven",
+        "autonomy",
+        "council",
+        "multi-agent",
+        "agent-teams",
         "model-routing",
+        "context-budgeting",
+        "security-compliance",
         "plugin-development",
         "prompt-engineering",
-        "enterprise",
-        "compliance",
-        "tutorials",
-        "performance-profiling",
-        "context-budgeting",
-        "session-analytics"
+        "channels",
+        "webhooks",
+        "cicd",
+        "consolidation",
+        "knowledge-graph"
       ],
       "repository": "https://github.com/markus41/claude"
     },
@@ -245,7 +236,7 @@
         "path": "plugins/claude-code-templating-plugin"
       },
       "description": "Universal templating and Harness expert plugin for Claude Code - enables fully autonomous project generation, pipeline creation, and deployment automation through a unified template interface. Supports Handlebars, Cookiecutter, Copier, Maven archetypes, and Harness pipelines. 5 commands, 6 agents, 3 skills.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -262,7 +253,16 @@
         "code-generation",
         "devops",
         "ci-cd",
-        "infrastructure"
+        "infrastructure",
+        "agentic-patterns",
+        "prompt-chaining",
+        "planning",
+        "tool-use",
+        "routing",
+        "reflection",
+        "multi-agent",
+        "memory",
+        "guardrails"
       ],
       "repository": "https://github.com/lobbi-docs/claude"
     },
@@ -274,7 +274,7 @@
         "path": "plugins/cowork-marketplace"
       },
       "description": "Browse, install, and manage cowork marketplace items backed by real plugin agents, skills, and commands",
-      "version": "1.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -287,7 +287,15 @@
         "skills",
         "templates",
         "workflows",
-        "session-blueprints"
+        "session-blueprints",
+        "agentic-design-patterns",
+        "routing",
+        "a2a",
+        "resource-aware",
+        "exploration",
+        "memory",
+        "guardrails",
+        "tool-use"
       ],
       "repository": "https://github.com/markus41/claude"
     },
@@ -299,7 +307,7 @@
         "path": "plugins/deployment-pipeline"
       },
       "description": "Harness CD integration pipeline with state-machine workflow orchestration",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -312,9 +320,44 @@
         "harness",
         "ci-cd",
         "deployment",
-        "pipeline"
+        "pipeline",
+        "agentic-patterns",
+        "prompt-chaining",
+        "hitl",
+        "guardrails",
+        "multi-agent",
+        "exception-handling"
       ],
       "repository": "https://github.com/markus41/deployment-pipeline"
+    },
+    {
+      "name": "dotnet-blazor",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/dotnet-blazor"
+      },
+      "description": "Comprehensive .NET 10, Blazor, ASP.NET Core, C#, and Syncfusion expert plugin for building modern web apps, microservices, and cloud-native solutions",
+      "version": "2.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      },
+      "license": "MIT",
+      "keywords": [
+        "dotnet",
+        "blazor",
+        "aspnet-core",
+        "csharp",
+        "syncfusion",
+        "microservices",
+        "aspire",
+        "entity-framework",
+        "grpc",
+        "signalr",
+        "maui",
+        "cloud-native"
+      ],
+      "repository": "https://github.com/markus41/claude"
     },
     {
       "name": "drawio-diagramming",
@@ -324,7 +367,7 @@
         "path": "plugins/drawio-diagramming"
       },
       "description": "Intelligent draw.io diagramming plugin with AI-powered diagram generation, multi-platform embedding (GitHub, Confluence, Azure DevOps, Notion, Teams, Harness), conditional formatting, live data binding, and MCP server integration for programmatic diagram creation and management.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -368,7 +411,15 @@
         "electron",
         "drawio-desktop",
         "visual-editor",
-        "wsl"
+        "wsl",
+        "agentic-patterns",
+        "prompt-chaining",
+        "reflection",
+        "planning",
+        "tool-use",
+        "routing",
+        "parallelization",
+        "resource-aware"
       ],
       "repository": "https://github.com/markus41/claude"
     },
@@ -380,7 +431,7 @@
         "path": "plugins/exec-automator"
       },
       "description": "Genesis (Forerunner) - AI-Powered Executive Director Automation Platform. Analyze organizational responsibilities, score automation potential with 6-factor algorithm, generate LangGraph workflows, and deploy 11 specialized agents for trade associations and nonprofits.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Brookside BI"
       },
@@ -395,7 +446,16 @@
         "ai-automation",
         "nonprofit",
         "trade-association",
-        "process-automation"
+        "process-automation",
+        "agentic-design-patterns",
+        "planning",
+        "multi-agent",
+        "routing",
+        "parallelization",
+        "memory",
+        "exception-handling",
+        "hitl",
+        "goal-setting"
       ],
       "repository": "https://github.com/brooksidebi/exec-automator"
     },
@@ -407,7 +467,7 @@
         "path": "plugins/fastapi-backend"
       },
       "description": "Comprehensive FastAPI backend development plugin with MongoDB/Beanie, Keycloak auth, Docker/K8s deployment, background tasks, caching, observability, and real-time features",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -427,7 +487,15 @@
         "redis",
         "celery",
         "arq",
-        "observability"
+        "observability",
+        "agentic-patterns",
+        "prompt-chaining",
+        "tool-use",
+        "rag",
+        "guardrails",
+        "memory",
+        "parallelization",
+        "resource-aware"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude"
     },
@@ -439,7 +507,7 @@
         "path": "plugins/frontend-design-system"
       },
       "description": "263+ design styles with multi-tenant Keycloak theming for AI-powered frontend development",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -453,7 +521,16 @@
         "tailwind",
         "ui-ux",
         "multi-tenant",
-        "accessibility"
+        "accessibility",
+        "agentic-patterns",
+        "prompt-chaining",
+        "routing",
+        "reflection",
+        "planning",
+        "tool-use",
+        "memory",
+        "parallelization",
+        "guardrails"
       ],
       "repository": "https://github.com/markus41/claude/tree/main/frontend-design-system"
     },
@@ -465,7 +542,7 @@
         "path": "plugins/fullstack-iac"
       },
       "description": "Zenith (Forerunner) - Complete full-stack development and infrastructure automation. FastAPI, React/Vite, Ansible, Terraform, Kubernetes with production-ready templates and CI/CD pipelines.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -482,7 +559,16 @@
         "infrastructure-as-code",
         "ci-cd",
         "templates",
-        "scaffolding"
+        "scaffolding",
+        "agentic-patterns",
+        "prompt-chaining",
+        "planning",
+        "tool-use",
+        "exception-handling",
+        "guardrails",
+        "hitl",
+        "multi-agent",
+        "evaluation"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude"
     },
@@ -494,7 +580,7 @@
         "path": "plugins/home-assistant-architect"
       },
       "description": "Complete Home Assistant platform with frontend design, energy management, cameras, sensors, local LLM integration, and Ubuntu server deployment",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "Brookside BI"
       },
@@ -507,7 +593,17 @@
         "local-llm",
         "mcp-server",
         "ubuntu",
-        "iot"
+        "iot",
+        "agentic-patterns",
+        "tool-use",
+        "routing",
+        "planning",
+        "exception-handling",
+        "memory",
+        "guardrails",
+        "hitl",
+        "parallelization",
+        "learning"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude.git"
     },
@@ -519,7 +615,7 @@
         "path": "plugins/jira-orchestrator"
       },
       "description": "Enterprise Jira orchestration with 81 agents, 16 teams, 46 commands, 11 skills. Features Atlassian MCP OAuth, Harness integration, Neon PostgreSQL, Redis caching, Temporal workflows, and structured reasoning frameworks.",
-      "version": "7.5.0",
+      "version": "8.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -541,9 +637,251 @@
         "neon",
         "postgresql",
         "redis",
-        "temporal"
+        "temporal",
+        "agentic-design-patterns",
+        "routing",
+        "planning",
+        "multi-agent",
+        "memory-management",
+        "reflection",
+        "parallelization",
+        "exception-handling",
+        "human-in-the-loop",
+        "evaluation-monitoring",
+        "prioritization",
+        "goal-setting"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude"
+    },
+    {
+      "name": "linear-orchestrator",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/linear-orchestrator"
+      },
+      "description": "Advanced Linear integration with two-way sync to Harness Code and Microsoft Planner. Covers Linear GraphQL API, OAuth 2.0, webhooks, attachments, agents (AIG), MCP, cycles, projects, initiatives, customer requests, SLA, triage, templates, sub-issues, and diffs. 22 commands, 10 skills, 12 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      },
+      "license": "MIT",
+      "keywords": [
+        "linear",
+        "linear-app",
+        "graphql",
+        "oauth",
+        "webhooks",
+        "agents",
+        "aig",
+        "harness",
+        "harness-code",
+        "microsoft-planner",
+        "ms-graph",
+        "two-way-sync",
+        "mcp",
+        "cycles",
+        "projects",
+        "initiatives",
+        "customer-requests",
+        "sla",
+        "triage",
+        "issue-tracking",
+        "orchestration",
+        "automation",
+        "agent-signals"
+      ],
+      "repository": "https://github.com/markus41/claude"
+    },
+    {
+      "name": "lobbi-bi-reports",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-bi-reports"
+      },
+      "description": "Business intelligence and reporting for insurance and financial services. Power BI report building, KPI design, dashboard embedding, data model mapping, refresh scheduling, and report distribution. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "power-bi",
+        "kpi",
+        "dashboard",
+        "analytics",
+        "reporting",
+        "data-model",
+        "bi"
+      ]
+    },
+    {
+      "name": "lobbi-compliance-guard",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-compliance-guard"
+      },
+      "description": "Regulatory compliance for insurance, mortgage, and financial services. Audit trail design, GDPR/CCPA review, SOX validation, data retention policies, and regulatory requirement mapping. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "compliance",
+        "audit",
+        "gdpr",
+        "sox",
+        "finra",
+        "insurance",
+        "mortgage",
+        "data-retention",
+        "regulatory"
+      ]
+    },
+    {
+      "name": "lobbi-data-migration",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-data-migration"
+      },
+      "description": "Data migration planning and execution for insurance and financial services systems. Schema analysis, data profiling, migration planning, transform building, validation running, and rollback coordination. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "migration",
+        "etl",
+        "schema",
+        "data-profiling",
+        "transform",
+        "rollback",
+        "dataverse",
+        "sharepoint"
+      ]
+    },
+    {
+      "name": "lobbi-document-intelligence",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-document-intelligence"
+      },
+      "description": "AI-powered document processing for insurance and financial services. PDF extraction, form classification, OCR pipelines, data validation, intelligent routing, and extraction auditing. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "document",
+        "ocr",
+        "extraction",
+        "classification",
+        "pdf",
+        "ai",
+        "rpa",
+        "forms"
+      ]
+    },
+    {
+      "name": "lobbi-engagement-toolkit",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-engagement-toolkit"
+      },
+      "description": "Client engagement tools for fixed-scope, fixed-price automation projects. ROI calculation, scope definition, proposal generation, change order protection, delivery tracking, and post-launch review. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "engagement",
+        "roi",
+        "scope",
+        "proposal",
+        "project-management",
+        "fixed-price",
+        "delivery"
+      ]
+    },
+    {
+      "name": "lobbi-insurance-domain",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-insurance-domain"
+      },
+      "description": "Insurance-specific automation for agencies and MGAs. Policy workflows, claims processing, producer portal design, E&O tracking, renewal automation, and compliance checking. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "insurance",
+        "claims",
+        "policy",
+        "producer",
+        "renewal",
+        "e-and-o",
+        "mga",
+        "agency"
+      ]
+    },
+    {
+      "name": "lobbi-m365-automator",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-m365-automator"
+      },
+      "description": "Microsoft 365 automation for insurance and financial services firms. SharePoint site building, Teams provisioning, Power Automate flow generation, Exchange rules, M365 auditing, and OneDrive organization. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "m365",
+        "sharepoint",
+        "teams",
+        "power-automate",
+        "exchange",
+        "microsoft-365",
+        "onedrive"
+      ]
+    },
+    {
+      "name": "lobbi-mortgage-domain",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-mortgage-domain"
+      },
+      "description": "Mortgage and lending automation for brokers and lenders. Loan pipeline tracking, disclosure generation, AUS integration, closing checklists, compliance scanning, and borrower portal design. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "mortgage",
+        "lending",
+        "loan",
+        "trid",
+        "hmda",
+        "aus",
+        "closing",
+        "respa"
+      ]
     },
     {
       "name": "lobbi-platform-manager",
@@ -553,7 +891,7 @@
         "path": "plugins/lobbi-platform-manager"
       },
       "description": "Streamline development on the-lobbi/keycloak-alpha with Keycloak management, service orchestration, and test generation",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -566,9 +904,71 @@
         "docker",
         "testing",
         "devops",
-        "platform-management"
+        "platform-management",
+        "agentic-patterns",
+        "multi-agent",
+        "tool-use",
+        "exception-handling",
+        "guardrails",
+        "memory",
+        "hitl",
+        "routing",
+        "planning",
+        "evaluation"
       ],
       "repository": "https://github.com/the-lobbi/keycloak-alpha"
+    },
+    {
+      "name": "lobbi-system-integrator",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-system-integrator"
+      },
+      "description": "API and system integration for insurance, mortgage, and financial services platforms. Connector building, webhook orchestration, data mapping, error handling, rate limit management, and integration testing. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "api",
+        "integration",
+        "webhook",
+        "connector",
+        "data-mapping",
+        "middleware",
+        "crm",
+        "los",
+        "ams"
+      ]
+    },
+    {
+      "name": "lobbi-workflow-engine",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/lobbi-workflow-engine"
+      },
+      "description": "Design and implement multi-step approval workflows, routing rules, escalation policies, and SLA tracking for insurance, mortgage, and financial services. 6 skills, 3 agents.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thelobbi.io"
+      },
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "approval",
+        "routing",
+        "escalation",
+        "sla",
+        "business-process",
+        "automation",
+        "insurance",
+        "mortgage",
+        "finserv"
+      ],
+      "repository": "https://github.com/the-lobbi/workflow-engine"
     },
     {
       "name": "marketplace-pro",
@@ -578,7 +978,7 @@
         "path": "plugins/marketplace-pro"
       },
       "description": "Advanced plugin marketplace platform with intent-based composition, supply chain security, contextual intelligence, dev studio hot-reload, and federated registry protocol. Transforms the marketplace from a package manager into an enterprise orchestration platform.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -597,9 +997,94 @@
         "fingerprinting",
         "sandboxing",
         "lockfile",
-        "policy-engine"
+        "policy-engine",
+        "agentic-design-patterns",
+        "a2a-communication",
+        "routing",
+        "guardrails",
+        "resource-optimization",
+        "exploration",
+        "memory-management",
+        "evaluation-monitoring"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude"
+    },
+    {
+      "name": "mui-expert",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/mui-expert"
+      },
+      "description": "Comprehensive Material UI (MUI) expert plugin — 26 skills, 14 commands, 7 agents covering theming, CSS variables, Pigment CSS, components, sx/styled, slots API, MUI X (DataGrid, DatePickers, Charts, TreeView), accessibility, performance, SSR/Next.js, animations, virtualization, forms, white-label/multi-tenant, headless (MUI Base), Joy UI, i18n/RTL, testing, migration, entity-driven CRUD, ecosystem integrations, and 200+ creative widget patterns.",
+      "version": "2.1.0",
+      "author": {
+        "name": "Claude Code"
+      },
+      "license": "MIT",
+      "keywords": [
+        "mui",
+        "material-ui",
+        "react",
+        "theming",
+        "design-system",
+        "data-grid",
+        "date-picker",
+        "charts",
+        "tree-view",
+        "sx-prop",
+        "styled",
+        "emotion",
+        "pigment-css",
+        "css-variables",
+        "accessibility",
+        "responsive",
+        "dark-mode",
+        "white-label",
+        "multi-tenant",
+        "ssr",
+        "next-js",
+        "slots-api",
+        "headless",
+        "joy-ui",
+        "virtualization",
+        "animations",
+        "i18n",
+        "rtl",
+        "testing",
+        "performance",
+        "migration",
+        "entity-driven",
+        "formengine",
+        "aspnet-core",
+        "dashboard-widgets",
+        "creative-ui"
+      ],
+      "repository": "https://github.com/markus41/claude"
+    },
+    {
+      "name": "project-management-plugin",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/project-management-plugin"
+      },
+      "description": "Universal project manager with keep-Claude-on-task guardrails: focus anchor, scope lock, done-when contract, over-engineering detector, drift auditor, turn budget, user-prompt archive, and compaction-safe handoff. Plus interview-first init, micro-task decomposition, deep research, transactional state MCP, and 9 PM platform integrations.",
+      "version": "1.3.0",
+      "author": {
+        "name": "Markus Ahling"
+      },
+      "license": "MIT",
+      "keywords": [
+        "project-management",
+        "task-decomposition",
+        "research-first",
+        "micro-tasks",
+        "autonomous",
+        "pm-integration",
+        "mcp"
+      ],
+      "repository": "https://github.com/markus41/claude"
     },
     {
       "name": "react-animation-studio",
@@ -609,7 +1094,7 @@
         "path": "plugins/react-animation-studio"
       },
       "description": "Create beautiful, performant web animations for React and TypeScript applications. Includes background effects, text animations, 3D transforms, creative visual effects, Framer Motion, GSAP, and more.",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "author": {
         "name": "Brookside BI"
       },
@@ -634,9 +1119,42 @@
         "aurora",
         "typewriter",
         "flip-card",
-        "parallax"
+        "parallax",
+        "agentic-patterns",
+        "prompt-chaining",
+        "parallelization",
+        "reflection",
+        "planning",
+        "tool-use",
+        "routing",
+        "resource-aware"
       ],
       "repository": "https://github.com/brooksidebi/react-animation-studio"
+    },
+    {
+      "name": "scrapin-aint-easy",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/scrapin-aint-easy"
+      },
+      "description": "Documentation intelligence engine, algorithm library, and codebase/agent drift detection system for Claude Code",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      },
+      "license": "MIT",
+      "keywords": [
+        "documentation",
+        "algorithms",
+        "drift-detection",
+        "knowledge-graph",
+        "mcp",
+        "lsp",
+        "interview-setup",
+        "code-intelligence"
+      ],
+      "repository": "https://github.com/markus41/claude"
     },
     {
       "name": "team-accelerator",
@@ -646,7 +1164,7 @@
         "path": "plugins/team-accelerator"
       },
       "description": "Enterprise development toolkit for teams - DevOps, code quality, integrations, workflow automation, documentation, and performance optimization across multi-cloud and full-stack platforms",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -664,7 +1182,13 @@
         "github-actions",
         "harness",
         "playwright",
-        "prometheus"
+        "prometheus",
+        "agentic-patterns",
+        "multi-agent",
+        "parallelization",
+        "routing",
+        "resource-aware",
+        "learning"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude"
     },
@@ -676,7 +1200,7 @@
         "path": "plugins/tvs-microsoft-deploy"
       },
       "description": "Consul - Enterprise Microsoft ecosystem orchestrator for TVS (Trusted Virtual Solutions) multi-entity multi-tenant deployment. 19 agents, 18 commands, 17 skills, 14 hooks, 5 workflows. MCP server for Graph API, Dataverse, Fabric, and Planner.",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -708,7 +1232,19 @@
         "dlp",
         "excel-automation",
         "solution-architect",
-        "pipeline-orchestration"
+        "pipeline-orchestration",
+        "agentic-patterns",
+        "prompt-chaining",
+        "planning",
+        "tool-use",
+        "exception-handling",
+        "guardrails",
+        "hitl",
+        "multi-agent",
+        "memory",
+        "a2a",
+        "routing",
+        "resource-aware"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude"
     },
@@ -720,7 +1256,7 @@
         "path": "plugins/upgrade-suggestion"
       },
       "description": "AI-powered upgrade intelligence platform. Multi-agent council analyzes your codebase across 8 dimensions, produces confidence-scored suggestions with visual impact heatmaps, upgrade roadmaps, framework-specific deep dives, and before/after impact previews. Features innovation radar, tech debt forecasting, and coordinated upgrade bundles.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -744,9 +1280,62 @@
         "deep-analysis",
         "impact-preview",
         "heatmap",
-        "multi-agent"
+        "multi-agent",
+        "agentic-design-patterns",
+        "reflection",
+        "parallelization",
+        "reasoning",
+        "evaluation",
+        "planning",
+        "resource-aware"
       ],
       "repository": "https://github.com/markus41/claude"
+    },
+    {
+      "name": "work-automation",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/work-automation"
+      },
+      "description": "Universal internal work-automation kit. ULTRA-mode constitution, Work Unit Protocol, Claude Code automation patterns (hooks, skills, plugins, agents, schedules, MCP, SDK, headless, fullscreen), and Harness pipeline ops. Project-agnostic. Glues existing plugins (harness-platform, claude-code-expert, tenant-management-kit) with reusable workflows.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      },
+      "keywords": [
+        "harness",
+        "claude-code",
+        "automation",
+        "work-unit",
+        "ultra",
+        "pipeline",
+        "ci-cd",
+        "hooks",
+        "skills",
+        "agents"
+      ]
+    },
+    {
+      "name": "writing-plans-enhanced",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/markus41/claude",
+        "path": "plugins/writing-plans-enhanced"
+      },
+      "description": "Enhanced writing-plans skill: 5-phase structure, task metadata (Type/Depends-on/Parallel-safe/Risk), non-TDD task templates, automated plan linter with self-tests. Standalone hub-hosted fork of superpowers:writing-plans.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Markus Ahling"
+      },
+      "license": "MIT",
+      "keywords": [
+        "planning",
+        "tdd",
+        "writing-plans",
+        "plan-linter",
+        "superpowers"
+      ]
     }
   ]
 }

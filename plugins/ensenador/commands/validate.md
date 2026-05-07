@@ -21,6 +21,8 @@ Parse `$ARGUMENTS` to determine what's being submitted:
 
 If the user described their work in prose without showing it, **stop and ask for the actual code**. You can't validate what you haven't read.
 
+> **📋 Note:** If the user has previously run `/ensenador:map` and received plan approval, the approved plan will be saved in `.claude/plan/<branch-name>/plan.md`. Check if this file exists for the current branch (`git rev-parse --abbrev-ref HEAD`) — if it does, read it to understand the original design intent. This gives you critical context to evaluate whether the implementation actually matches the plan that was approved.
+
 ---
 
 ## Phase 1: Identify the domain and required expertise
