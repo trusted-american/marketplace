@@ -1,108 +1,71 @@
 ---
-description: Queue ALL specialist agents for round-robin code review of your A3 changes — finds issues across every concern area
+description: Review A3 changes with the specialist agents whose domains the diff actually touches
 argument-hint: [files-or-branch-to-review]
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent
 ---
 
-# /review Command
+# /review
 
-Triggers a full round-robin review of code changes using ALL specialist agents. Use this after writing code yourself (without `/orchestrate`) to get expert review across every concern area.
+Reviews A3 code changes. Reviewers are **selected by what the diff touches** — not everyone,
+every time.
 
-## Authentication Gate
+## Step 0: Access Gate (once, here only)
 
 ```bash
 gh api repos/trusted-american/a3 --jq '.full_name' 2>/dev/null
 ```
-STOP if this fails — user needs GitHub access to trusted-american/a3.
+STOP if this fails — the user needs GitHub access to trusted-american/a3.
 
-## Step 1: Identify Changes
+## Step 1: Get the diff (not the files)
 
-Determine what code to review:
-
-- If the user specified files: review those files
-- If the user specified a branch: run `git diff main...HEAD` to find all changes
-- If neither: run `git diff` and `git diff --cached` to find uncommitted changes
-
-Read ALL changed files completely. Build a manifest:
+```bash
+git diff --stat && git diff
 ```
-Files Changed:
-- app/models/referral.ts (new)
-- app/routes/authenticated/referrals.ts (new)
-- app/templates/authenticated/referrals.gts (new)
-- app/components/referral-card.gts (new)
-- functions/src/firestore/referrals/create.ts (new)
-- firestore.rules (modified)
-- tests/unit/models/referral-test.ts (new)
-```
+Use `git diff main...HEAD` if the user named a branch, or `git diff -- <paths>` if they named
+files. **Review the diff.** Only open a full file when a hunk is genuinely unreadable without
+its surrounding context, and then read just that range with `sed -n 'A,Bp'`.
 
-## Step 2: Spawn Parallel Review Agents
+## Step 2: Route to reviewers by changed path
 
-Spawn ALL specialist agents in parallel, each reviewing from their domain:
+| Changed paths | Reviewer |
+|---------------|----------|
+| `app/models/`, `app/adapters/`, `app/serializers/`, `app/transforms/` | `model-writer` |
+| `app/routes/`, `app/templates/`, `app/controllers/` | `route-writer` |
+| `app/components/`, `app/helpers/`, `app/modifiers/` | `component-writer` |
+| `functions/src/` | `function-writer` |
+| `app/abilities/`, `firestore.rules`, `database.rules.json` | `ability-writer` |
+| Any `.gts` with markup | `design-system-writer` |
+| `tests/` | `test-writer` |
 
-1. **model-writer** — Reviews all data layer code (models, adapters, serializers)
-2. **route-writer** — Reviews all routing code (routes, templates, controllers)
-3. **component-writer** — Reviews all UI code (components, helpers, modifiers)
-4. **function-writer** — Reviews all backend code (Cloud Functions)
-5. **ability-writer** — Reviews all security code (abilities, Firestore rules)
-6. **design-system-writer** — Reviews ALL frontend code for TAIA design system compliance
-7. **example-finder** — Reviews ALL code for convention compliance against the actual A3 codebase
-8. **integration-specialist** — Reviews ALL code for cross-concern integration
-9. **test-writer** — Reviews ALL code for test coverage adequacy
-10. **code-reviewer** — Holistic review across all dimensions
+Then add:
+- `integration-specialist` — only when the diff spans **3 or more** of the rows above.
+- `code-reviewer` — always, final gate.
 
-Each agent receives the complete set of changed files and the context of what they're reviewing.
+**Cap the panel at 4 agents.** If routing selects more, keep the 3 with the most changed
+lines plus `code-reviewer`, and say in your summary which domains you did not fan out to.
 
-## Step 3: Collect Verdicts
+Spawn the selected agents in **one** message so they run in parallel. Give each the diff and
+the specific paths in their domain.
 
-Aggregate all agent verdicts:
+## Step 3: Report
+
+Aggregate into one list, most severe first:
 
 ```
-Review Summary:
-├── model-writer:            APPROVE
-├── route-writer:            REQUEST_CHANGES (2 issues)
-├── component-writer:        APPROVE
-├── function-writer:         APPROVE
-├── ability-writer:          BLOCK (security issue)
-├── design-system-writer:    REQUEST_CHANGES (raw HTML should use DS components)
-├── example-finder:          REQUEST_CHANGES (naming deviates from 90% of A3 models)
-├── integration-specialist:  REQUEST_CHANGES (1 issue)
-├── test-writer:             REQUEST_CHANGES (missing tests)
-└── code-reviewer:           REQUEST_CHANGES (conventions)
-
-Overall: NOT APPROVED (1 BLOCK, 5 REQUEST_CHANGES)
+BLOCK      app/abilities/referral.ts:22 — ability allows read for any authenticated user;
+                                          firestore.rules restricts to owner. They disagree.
+CHANGES    app/components/referral-card.gts:14 — raw <button class="btn btn-primary">;
+                                                 use <Button @color="primary">.
 ```
 
-## Step 4: Present Findings
+State verdicts honestly — do not minimise. Then ask once whether to apply the fixes.
 
-Present ALL findings to the user organized by severity:
+If the user says yes: apply them, then **re-review only the changed hunks yourself**. Do not
+re-spawn the panel. Maximum 2 rounds total, then hand remaining disagreements to the user.
 
-### BLOCK (must fix)
-- List all blocking issues with file, line, description, and fix
+## Step 4: Verification
 
-### REQUEST_CHANGES (should fix)
-- List all requested changes with file, line, description, and fix
-
-### APPROVE (looks good)
-- Brief confirmation of what passed
-
-## Step 5: User Decision
-
-Ask the user:
-> "Would you like me to implement these fixes automatically, or would you prefer to fix them yourself?"
-
-If the user wants automatic fixes:
-1. Implement all fixes
-2. Re-run the review (back to Step 2)
-3. Continue until all agents APPROVE
-
-If the user wants to fix themselves:
-- Present the specific code changes needed
-- Offer to re-review after they make changes
-
-## Critical Rules
-
-- NEVER skip any reviewer — ALL 10 agents must review
-- Present findings honestly — don't minimize issues
-- BLOCK verdicts cannot be overridden without fixing the issue
-- The integration-specialist's findings are especially important
-- Always offer to implement fixes — don't just report problems
+- Run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
+  `pnpm build`, `firebase emulators:*`, `tsc`.
+- To actually verify: push a branch, open a PR, and read CI (`gh pr checks`, `gh run view`).

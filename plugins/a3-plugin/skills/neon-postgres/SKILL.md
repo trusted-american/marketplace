@@ -4,11 +4,27 @@ description: Neon PostgreSQL integration reference — 3 backend files. Connecti
 version: 0.1.0
 ---
 
+
 # Neon PostgreSQL Integration Reference
 
 A3 uses Neon PostgreSQL alongside Firestore for use cases that require relational queries, vector similarity search, complex aggregations, and structured data exports. This skill covers the 3 backend files, connection pooling, parameterized queries, SQL injection prevention, the Neon serverless driver, data migration scripts, and guidance on when to use Postgres vs Firestore.
 
 ---
+
+## How to use this skill
+
+This file is an **index**. The detail lives in `reference/` so you load only what the
+task needs. Find your topic below, read that one file, and stop. Never read the whole
+`reference/` directory, and never read a reference file "for background".
+
+| File | Covers |
+|------|--------|
+| `reference/02-database-connection-utils-db-ts.md` | Database Connection — `utils/db.ts` |
+| `reference/06-database-schema.md` | Database Schema |
+| `reference/07-client-upload-script-client-upload-ts.md` | Client Upload Script — `client-upload.ts` |
+| `reference/09-common-query-patterns.md` | Common Query Patterns |
+| `reference/10-when-to-use-postgres-vs-firestore.md` | When to Use Postgres vs Firestore |
+| `reference/11-error-handling.md` | Error Handling |
 
 ## Architecture Overview
 
@@ -31,63 +47,6 @@ A3 maintains Firestore as the primary database for real-time data and Neon Postg
 - **Audit logs** (high-volume append-only data)
 
 ---
-
-## Database Connection — `utils/db.ts`
-
-### Pool Setup with `pg`
-
-```typescript
-// functions/src/utils/db.ts
-import { Pool, PoolConfig, QueryResult } from 'pg';
-
-const poolConfig: PoolConfig = {
-  connectionString: process.env.NEON_DATABASE_URL!,
-  ssl: {
-    rejectUnauthorized: true,
-  },
-  max: 10,                   // Maximum pool connections
-  idleTimeoutMillis: 30000,  // Close idle connections after 30s
-  connectionTimeoutMillis: 10000, // Timeout connecting after 10s
-  allowExitOnIdle: true,     // Allow process to exit if pool is idle
-};
-
-export const pool = new Pool(poolConfig);
-
-// Log pool errors
-pool.on('error', (err) => {
-  console.error('Unexpected Neon pool error:', err);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  await pool.end();
-});
-```
-
-### Connection String Format
-
-```
-postgresql://username:password@ep-xxxxx.us-east-2.aws.neon.tech/dbname?sslmode=require
-```
-
-| Component | Description |
-|---|---|
-| `username` | Neon project role name |
-| `password` | Role password |
-| `ep-xxxxx.us-east-2.aws.neon.tech` | Neon endpoint hostname |
-| `dbname` | Database name (default: `neondb`) |
-| `sslmode=require` | SSL is mandatory for Neon connections |
-
-### Key Points
-
-- **Connection pooling**: A3 uses the `pg` Pool, which manages a pool of connections. Each Cloud Function invocation reuses connections from the pool.
-- **SSL required**: Neon mandates SSL. The `ssl: { rejectUnauthorized: true }` ensures certificate validation.
-- **Pool size**: `max: 10` limits concurrent connections. In Cloud Functions, each function instance has its own pool. Neon's free tier allows up to 100 concurrent connections.
-- **Idle timeout**: Connections idle for 30 seconds are closed. This is important in serverless environments where function instances may be recycled.
-- **Exit on idle**: `allowExitOnIdle: true` prevents the Node.js process from staying alive just because idle pool connections exist.
-
----
-
 ## Neon Serverless Driver
 
 For lightweight or edge deployments, A3 can use the Neon serverless driver instead of `pg`:
@@ -122,7 +81,6 @@ const result = await sql`
 A3 primarily uses `pg` Pool for backend Cloud Functions and reserves the serverless driver for edge cases.
 
 ---
-
 ## Parameterized Queries (SQL Injection Prevention)
 
 **Critical**: All queries in A3 use parameterized queries. Never interpolate user input into SQL strings.
@@ -165,7 +123,6 @@ await pool.query(
 ```
 
 ---
-
 ## Query Helper Functions
 
 ### Generic Query Helper
@@ -232,193 +189,6 @@ await withTransaction(async (client) => {
 ```
 
 ---
-
-## Database Schema
-
-### Core Tables
-
-```sql
--- Client data (synced from Firestore)
-CREATE TABLE clients (
-  id TEXT PRIMARY KEY,
-  organization_id TEXT NOT NULL,
-  display_name TEXT NOT NULL,
-  email TEXT,
-  company TEXT,
-  phone TEXT,
-  address_city TEXT,
-  address_state TEXT,
-  tags TEXT[],
-  status TEXT DEFAULT 'active',
-  deal_count INTEGER DEFAULT 0,
-  total_revenue NUMERIC(12, 2) DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_clients_org ON clients (organization_id);
-CREATE INDEX idx_clients_email ON clients (email);
-CREATE INDEX idx_clients_status ON clients (organization_id, status);
-
--- Client embeddings (pgvector)
-CREATE EXTENSION IF NOT EXISTS vector;
-
-CREATE TABLE client_embeddings (
-  client_id TEXT PRIMARY KEY REFERENCES clients(id) ON DELETE CASCADE,
-  organization_id TEXT NOT NULL,
-  embedding vector(1536) NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_embeddings_org ON client_embeddings (organization_id);
-CREATE INDEX idx_embeddings_vector ON client_embeddings
-  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
-
--- Deal metrics (aggregated data)
-CREATE TABLE deal_metrics (
-  deal_id TEXT PRIMARY KEY,
-  organization_id TEXT NOT NULL,
-  client_id TEXT NOT NULL,
-  title TEXT NOT NULL,
-  stage TEXT NOT NULL,
-  value NUMERIC(12, 2) DEFAULT 0,
-  pipeline_name TEXT,
-  assigned_to TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  closed_at TIMESTAMPTZ
-);
-
-CREATE INDEX idx_deals_org ON deal_metrics (organization_id);
-CREATE INDEX idx_deals_stage ON deal_metrics (organization_id, stage);
-CREATE INDEX idx_deals_assigned ON deal_metrics (organization_id, assigned_to);
-
--- Audit logs (append-only)
-CREATE TABLE audit_logs (
-  id BIGSERIAL PRIMARY KEY,
-  organization_id TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  action TEXT NOT NULL,
-  entity_type TEXT NOT NULL,
-  entity_id TEXT NOT NULL,
-  details JSONB,
-  ip_address INET,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_audit_org_date ON audit_logs (organization_id, created_at DESC);
-CREATE INDEX idx_audit_entity ON audit_logs (entity_type, entity_id);
-```
-
----
-
-## Client Upload Script — `client-upload.ts`
-
-Bulk uploads Firestore client data to Neon PostgreSQL.
-
-```typescript
-// functions/src/neon/client-upload.ts
-import * as admin from 'firebase-admin';
-import { pool } from '../utils/db';
-
-export async function uploadClientsToNeon(orgId: string): Promise<number> {
-  const snapshot = await admin.firestore()
-    .collection('organizations').doc(orgId)
-    .collection('clients')
-    .get();
-
-  if (snapshot.empty) return 0;
-
-  let uploadedCount = 0;
-  const BATCH_SIZE = 500;
-  const clients = snapshot.docs;
-
-  for (let i = 0; i < clients.length; i += BATCH_SIZE) {
-    const batch = clients.slice(i, i + BATCH_SIZE);
-
-    // Build bulk INSERT with ON CONFLICT for upsert
-    const values: any[] = [];
-    const placeholders: string[] = [];
-
-    batch.forEach((doc, index) => {
-      const data = doc.data();
-      const offset = index * 9; // 9 columns
-      placeholders.push(
-        `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9})`,
-      );
-      values.push(
-        doc.id,
-        orgId,
-        data.displayName || '',
-        data.email || null,
-        data.company || null,
-        data.phone || null,
-        data.address?.city || null,
-        data.address?.state || null,
-        data.tags || [],
-      );
-    });
-
-    const sql = `
-      INSERT INTO clients (id, organization_id, display_name, email, company, phone, address_city, address_state, tags)
-      VALUES ${placeholders.join(', ')}
-      ON CONFLICT (id) DO UPDATE SET
-        display_name = EXCLUDED.display_name,
-        email = EXCLUDED.email,
-        company = EXCLUDED.company,
-        phone = EXCLUDED.phone,
-        address_city = EXCLUDED.address_city,
-        address_state = EXCLUDED.address_state,
-        tags = EXCLUDED.tags,
-        updated_at = NOW()
-    `;
-
-    await pool.query(sql, values);
-    uploadedCount += batch.length;
-  }
-
-  return uploadedCount;
-}
-```
-
-### Trigger-Based Sync
-
-For real-time sync, A3 uses Firestore triggers:
-
-```typescript
-export const onClientWriteSyncNeon = functions.firestore
-  .document('organizations/{orgId}/clients/{clientId}')
-  .onWrite(async (change, context) => {
-    const { orgId, clientId } = context.params;
-
-    if (!change.after.exists) {
-      // Deleted — remove from Neon
-      await pool.query('DELETE FROM clients WHERE id = $1', [clientId]);
-      return;
-    }
-
-    const data = change.after.data()!;
-
-    await pool.query(
-      `INSERT INTO clients (id, organization_id, display_name, email, company, phone, address_city, address_state, tags, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       ON CONFLICT (id) DO UPDATE SET
-         display_name = $3, email = $4, company = $5, phone = $6,
-         address_city = $7, address_state = $8, tags = $9, status = $10,
-         updated_at = NOW()`,
-      [
-        clientId, orgId,
-        data.displayName || '', data.email || null,
-        data.company || null, data.phone || null,
-        data.address?.city || null, data.address?.state || null,
-        data.tags || [], data.status || 'active',
-      ],
-    );
-  });
-```
-
----
-
 ## Client Remove Script — `client-remove.ts`
 
 Removes client data from Neon when clients are deleted.
@@ -453,210 +223,6 @@ export async function removeClientsFromNeon(clientIds: string[]): Promise<number
 ```
 
 ---
-
-## Common Query Patterns
-
-### Aggregation Queries
-
-```typescript
-// Revenue by stage for pipeline report
-const revenue = await query<{ stage: string; total: number; count: number }>(
-  `SELECT stage, SUM(value) as total, COUNT(*) as count
-   FROM deal_metrics
-   WHERE organization_id = $1
-   GROUP BY stage
-   ORDER BY total DESC`,
-  [orgId],
-);
-
-// Monthly revenue trend
-const monthlyRevenue = await query(
-  `SELECT
-     DATE_TRUNC('month', closed_at) as month,
-     SUM(value) as revenue,
-     COUNT(*) as deals_closed
-   FROM deal_metrics
-   WHERE organization_id = $1
-     AND stage = 'closed_won'
-     AND closed_at >= $2
-   GROUP BY DATE_TRUNC('month', closed_at)
-   ORDER BY month`,
-  [orgId, startDate],
-);
-
-// Top clients by revenue
-const topClients = await query(
-  `SELECT c.id, c.display_name, c.company,
-          SUM(d.value) as total_revenue,
-          COUNT(d.deal_id) as deal_count
-   FROM clients c
-   JOIN deal_metrics d ON d.client_id = c.id
-   WHERE c.organization_id = $1
-     AND d.stage = 'closed_won'
-   GROUP BY c.id, c.display_name, c.company
-   ORDER BY total_revenue DESC
-   LIMIT $2`,
-  [orgId, limit],
-);
-```
-
-### Vector Similarity Search
-
-```typescript
-// Find similar clients using pgvector
-const similarClients = await query(
-  `SELECT ce.client_id, c.display_name, c.company,
-          1 - (ce.embedding <=> $1::vector) as similarity
-   FROM client_embeddings ce
-   JOIN clients c ON c.id = ce.client_id
-   WHERE ce.organization_id = $2
-   ORDER BY ce.embedding <=> $1::vector
-   LIMIT $3`,
-  [queryVector, orgId, limit],
-);
-```
-
-### Full-Text Search (Alternative to Algolia)
-
-```typescript
-// PostgreSQL full-text search as a fallback
-const results = await query(
-  `SELECT id, display_name, email, company,
-          ts_rank(to_tsvector('english', display_name || ' ' || COALESCE(email, '') || ' ' || COALESCE(company, '')),
-                  plainto_tsquery('english', $1)) as rank
-   FROM clients
-   WHERE organization_id = $2
-     AND to_tsvector('english', display_name || ' ' || COALESCE(email, '') || ' ' || COALESCE(company, ''))
-         @@ plainto_tsquery('english', $1)
-   ORDER BY rank DESC
-   LIMIT $3`,
-  [searchQuery, orgId, limit],
-);
-```
-
-### Audit Log Queries
-
-```typescript
-// Recent activity for an entity
-const logs = await query(
-  `SELECT action, user_id, details, created_at
-   FROM audit_logs
-   WHERE entity_type = $1 AND entity_id = $2
-   ORDER BY created_at DESC
-   LIMIT $3`,
-  ['deal', dealId, 50],
-);
-
-// Activity feed for organization
-const feed = await query(
-  `SELECT al.action, al.entity_type, al.entity_id, al.details, al.created_at, al.user_id
-   FROM audit_logs al
-   WHERE al.organization_id = $1
-     AND al.created_at >= $2
-   ORDER BY al.created_at DESC
-   LIMIT $3`,
-  [orgId, sinceDate, 100],
-);
-```
-
----
-
-## When to Use Postgres vs Firestore
-
-| Use Case | Database | Reason |
-|---|---|---|
-| Real-time client/deal data | Firestore | Real-time listeners, offline support |
-| User authentication data | Firestore | Tight Firebase Auth integration |
-| Application state | Firestore | Fast reads, real-time sync |
-| Vector embeddings | PostgreSQL | pgvector extension, similarity search |
-| Complex joins | PostgreSQL | Relational queries across entities |
-| Aggregation reports | PostgreSQL | SUM, AVG, GROUP BY, window functions |
-| Data exports (CSV/Excel) | PostgreSQL | SQL queries output tabular data |
-| Audit logs | PostgreSQL | Append-only, high volume, queried by date range |
-| Full-text search (backup) | PostgreSQL | `tsvector` / `tsquery` for fallback search |
-| File metadata | Firestore | Lightweight, real-time |
-| Settings/config | Firestore | Simple key-value, real-time updates |
-
-### Data Flow
-
-```
-Firestore (source of truth)
-    |
-    ├── Firestore triggers (onCreate, onUpdate, onDelete)
-    |       |
-    |       └── Sync to Neon PostgreSQL
-    |               ├── clients table
-    |               ├── client_embeddings table
-    |               ├── deal_metrics table
-    |               └── audit_logs table
-    |
-    └── Frontend reads (real-time listeners)
-
-PostgreSQL (analytics & search)
-    |
-    ├── Aggregation queries (reports, dashboards)
-    ├── Vector similarity search (semantic search)
-    ├── Relational joins (cross-entity queries)
-    └── Data exports (CSV, Excel)
-```
-
----
-
-## Error Handling
-
-```typescript
-try {
-  const result = await pool.query(sql, params);
-  return result.rows;
-} catch (err: any) {
-  // Connection errors
-  if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
-    console.error('Cannot connect to Neon:', err.message);
-    throw new Error('Database connection failed');
-  }
-
-  // Query errors
-  if (err.code === '23505') {
-    // unique_violation
-    console.error('Duplicate key:', err.detail);
-    throw new Error('Record already exists');
-  }
-  if (err.code === '23503') {
-    // foreign_key_violation
-    console.error('Foreign key violation:', err.detail);
-    throw new Error('Referenced record does not exist');
-  }
-  if (err.code === '42P01') {
-    // undefined_table
-    console.error('Table does not exist:', err.message);
-    throw new Error('Database schema error');
-  }
-  if (err.code === '57014') {
-    // query_canceled (timeout)
-    console.error('Query timed out:', err.message);
-    throw new Error('Query took too long');
-  }
-
-  console.error('PostgreSQL error:', err.code, err.message);
-  throw new Error('Database query failed');
-}
-```
-
-### PostgreSQL Error Codes
-
-| Code | Name | Meaning |
-|---|---|---|
-| `23505` | `unique_violation` | Duplicate key on unique constraint |
-| `23503` | `foreign_key_violation` | FK reference does not exist |
-| `23502` | `not_null_violation` | NULL value in non-nullable column |
-| `42P01` | `undefined_table` | Table does not exist |
-| `42703` | `undefined_column` | Column does not exist |
-| `57014` | `query_canceled` | Query exceeded statement_timeout |
-| `08006` | `connection_failure` | Connection dropped |
-| `53300` | `too_many_connections` | Max connections exceeded |
-
----
-
 ## Neon-Specific Features
 
 ### Branching
@@ -691,7 +257,6 @@ postgresql://user:pass@ep-xxxxx-pooler.us-east-2.aws.neon.tech/dbname?sslmode=re
 ```
 
 ---
-
 ## Environment Variables Required
 
 | Variable | Description |
@@ -699,7 +264,6 @@ postgresql://user:pass@ep-xxxxx-pooler.us-east-2.aws.neon.tech/dbname?sslmode=re
 | `NEON_DATABASE_URL` | Full connection string with credentials and SSL |
 
 ---
-
 ## Common Patterns and Best Practices
 
 1. **Always parameterize**: Never interpolate user input into SQL strings. Use `$1`, `$2`, etc.

@@ -1,195 +1,95 @@
 ---
-description: Orchestrate full-ticket implementation across the A3 stack — gathers requirements, delegates to specialists, coordinates round-robin review until unanimous approval
+description: Implement an A3 feature end-to-end — scopes fast, delegates to the minimum set of specialists, runs one review pass
 argument-hint: <task-description>
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Agent
 ---
 
-# /orchestrate Command
+# /orchestrate
 
-This is the master command for implementing complete A3 features. It orchestrates the full development lifecycle from requirements gathering through round-robin review.
+Implements complete A3 features. Optimised for **speed and low context** — the fewest agents
+and the fewest file reads that still produce correct code.
 
-## Step 0: Authentication Gate
-
-Run this FIRST before anything else:
+## Step 0: Access Gate (once, here only)
 
 ```bash
 gh api repos/trusted-american/a3 --jq '.full_name' 2>/dev/null
 ```
-
-If this returns empty or errors, STOP immediately and tell the user:
+If this fails, STOP:
 > "Access denied. This plugin requires authenticated GitHub access to trusted-american/a3. Run `gh auth login` and ensure you have repo access."
 
-Do NOT proceed past this step without successful authentication.
+Spawned agents do NOT repeat this check — it is done here for the whole run.
 
-## Step 1: Requirements Gathering
+## Step 1: Scope (one message, max 3 questions)
 
-You MUST ask the user extensive questions before writing any code. This is NOT optional.
+Ask only what a wrong guess would actually change. Everything else gets a stated assumption.
+Batch all questions into a single message; never interrogate in rounds.
 
-### Mandatory Questions:
+Typical must-asks (pick at most 3):
+- New Firestore collection + fields, or reuse of an existing one?
+- Who can access it (admin / all authenticated / owner-only)?
+- Where it lives in the navigation.
 
-**Scope:**
-1. What is the feature/bug/task in detail?
-2. Which sections of A3 does this affect? (admin, authenticated, public?)
-3. Is there a Jira ticket or issue number?
-4. Are there mockups, designs, or wireframes?
+Skip this step entirely when the task is single-layer or the description already answers it.
 
-**Data Layer:**
-5. Are new Firestore collections needed? What fields and types?
-6. Are there relationships to existing models? Which ones?
-7. Do we need subcollections (files, notes, activities)?
-8. Are there computed properties or derived data?
+## Step 2: Targeted investigation (budget: 3 files)
 
-**Permissions:**
-9. Who can access this? (admin only, all authenticated users, specific roles?)
-10. Are there ownership-based permissions? (users can only see their own data?)
-11. Do Firestore rules need updating?
+Find the closest existing analogue and follow it. Use `grep -n` to locate, then a ranged
+`sed -n 'A,Bp'` read of the relevant section — never a whole-file read, never a broad glob
+dump. If two examples agree, stop looking. Delegate to `example-finder` only if two greps
+fail to settle the convention.
 
-**Frontend:**
-12. Where does this live in the navigation? (route path)
-13. Are there new components needed? Describe the UI.
-14. Should this use existing components from A3? Which ones look similar?
-15. Are there query params for filtering/searching?
-16. Does it need internationalization for any new strings?
+Write findings into a **short brief** (paths + the pattern to copy). This brief is what
+agents receive — not file contents.
 
-**Backend:**
-17. Are Cloud Functions needed? (triggers, HTTPS endpoints, PubSub?)
-18. Does this integrate with external services? (Stripe, Mailgun, PandaDoc, Algolia, etc.)
-19. Are there background jobs or async processes?
+## Step 3: Delegate to the minimum agent set
 
-**Testing:**
-20. What are the critical user flows to test?
-21. Are there edge cases to specifically cover?
-22. Are there permission scenarios to test?
+Spawn only the agents whose layer the task actually touches:
 
-**Context:**
-23. Are there similar features in A3 to use as reference?
-24. Is there existing code to modify vs. new code to create?
+| Agent | Spawn when |
+|-------|-----------|
+| `model-writer` | New/changed Firestore model, adapter, serializer |
+| `function-writer` | New/changed Cloud Function |
+| `ability-writer` | Permission or `firestore.rules` change |
+| `route-writer` | New route / route template / query-param controller |
+| `component-writer` | New/changed Glimmer GTS component |
+| `design-system-writer` | UI that needs design system component selection |
+| `integration-specialist` | Change spans 3+ layers |
+| `test-writer` | Tests explicitly in scope |
 
-Wait for answers. Ask follow-up questions if any answer is vague or incomplete. Do NOT proceed to implementation until you are confident you understand the full scope.
+Order: models → (functions ∥ abilities) → (routes ∥ components ∥ design system) →
+integration → tests. Parallel agents go out in **one** message.
 
-## Step 2: Codebase Investigation
+A two-file change needs one or two agents. Nine agents is not a quality signal.
 
-Before delegating to agents, investigate the A3 codebase yourself:
+## Step 4: One review pass
 
-1. **Find similar patterns**: Search for existing features that resemble this task
-2. **Read related files**: Models, routes, components that this feature will interact with
-3. **Check conventions**: Verify current patterns for the areas being modified
-4. **Identify dependencies**: What existing code will the new feature depend on?
-5. **Map the route**: Determine the exact route path and hierarchy
+Spawn `code-reviewer` **plus at most 2 domain reviewers** for the layers actually touched,
+in parallel. Feed them `git diff` — not the full files.
 
-Compile findings into a context document that all agents will receive.
+Verdicts are **APPROVE** or **CHANGES** (file:line + concrete fix).
 
-## Step 3: Task Decomposition & Agent Delegation
+- On CHANGES: the responsible agent fixes it, then you verify the fix against the diff
+  yourself. Do not re-spawn the panel.
+- **Maximum 2 rounds.** Still contested after round 2 → present both positions to the user
+  and let them decide.
 
-Break the task into work items and spawn agents in dependency order:
+## Step 5: Verification & Delivery
 
-### Layer 1: Foundation (run first)
-Spawn **model-writer** agent with:
-- Full requirements
-- Existing model patterns for reference
-- Firestore collection design
-- Relationship mapping
+- Run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
+  `pnpm build`, `firebase emulators:*`, `tsc`.
+- Tests are written, not run. To verify: push a branch, open a PR, read CI
+  (`gh pr checks`, `gh run view`).
 
-### Layer 2: Backend (after models exist, run in parallel)
-Spawn **function-writer** agent with:
-- Function requirements (triggers, endpoints)
-- Model definitions from Layer 1
-- External service integration details
-
-Spawn **ability-writer** agent with:
-- Permission requirements
-- Existing ability patterns
-- Firestore rules context
-
-### Layer 3: Frontend (after models & permissions exist, run in parallel)
-Spawn **route-writer** agent with:
-- Route hierarchy and paths
-- Model types for route hooks
-- Navigation structure
-
-Spawn **component-writer** agent with:
-- UI requirements and designs
-- Available data from routes
-- Existing component patterns to reuse
-
-### Layer 4: Integration (after all pieces exist)
-Spawn **integration-specialist** agent with:
-- ALL code produced by Layers 1-3
-- Integration map for the feature
-- Known integration concerns
-
-### Layer 5: Testing (after implementation is complete)
-Spawn **test-writer** agent with:
-- ALL code produced by Layers 1-4
-- Test scenarios from requirements
-- Edge cases to cover
-
-## Step 4: Round-Robin Review
-
-After ALL agents complete their work, initiate the round-robin review protocol.
-
-### Review Rotation:
-Each agent reviews ALL other agents' output from their specialty perspective:
-
-1. **model-writer** reviews all code for data layer correctness
-2. **function-writer** reviews all code for backend integration correctness
-3. **ability-writer** reviews all code for security and permission correctness
-4. **route-writer** reviews all code for routing and navigation correctness
-5. **component-writer** reviews all code for UI and UX correctness
-6. **integration-specialist** reviews ALL code for cross-concern integration
-7. **test-writer** reviews ALL code for testability and test coverage
-8. **code-reviewer** performs final holistic review
-
-### Review Iteration Protocol:
-
-Each reviewer provides a verdict: **APPROVE**, **REQUEST_CHANGES**, or **BLOCK**
-
-```
-Round N:
-├── Agent A reviews → APPROVE
-├── Agent B reviews → REQUEST_CHANGES (lists specific fixes)
-├── Agent C reviews → APPROVE
-├── ...
-└── Agent H reviews → APPROVE
-
-If any agent is not APPROVE:
-  1. Responsible agent implements the requested changes
-  2. Requesting agent re-reviews the fix
-  3. All other agents confirm the fix doesn't break their domain
-  4. Proceed to Round N+1
-```
-
-**Continue iterating until ALL agents vote APPROVE.**
-
-Maximum 5 rounds. If not resolved after 5 rounds, present all findings to the user and ask for direction.
-
-### Acceptance Criteria:
-- **ALL 8 agents must APPROVE** (zero tolerance)
-- No unresolved BLOCK verdicts
-- No unresolved REQUEST_CHANGES verdicts
-- code-reviewer's holistic review passes all 6 dimensions
-
-## Step 5: Delivery
-
-Once all agents approve:
-
-1. **Present file manifest** — List every file created/modified with a one-line description
-2. **Show change summary** — Organized by domain (models, routes, components, functions, tests, rules)
-3. **List manual steps** — Any actions the user needs to take:
-   - Firestore index creation
-   - Environment variable configuration
-   - External service setup (webhooks, API keys)
-   - Router updates
-   - Translation file additions
-4. **Confirm test results** — All tests should pass
-5. **Write files** — After user confirmation, write all files to the A3 repository
+Then deliver:
+1. File manifest — every path created/modified, one line each.
+2. Manual steps (Firestore indexes, env vars, router entry, translation keys).
+3. Offer to push a branch and open a PR so CI verifies the change.
 
 ## Critical Rules
 
-- NEVER skip requirements gathering. The more you know, the better the code.
-- NEVER let an agent's code through without unanimous review approval.
-- ALWAYS investigate existing A3 code before generating new code.
-- ALWAYS prefer GTS route templates over controllers unless filtering/query params are needed.
-- The integration-specialist is the most important reviewer — prioritize their findings.
-- If ANY agent is uncertain about something, investigate the codebase before proceeding.
-- Present the full review findings transparently to the user.
+- Fewest agents, fewest reads. Fan-out costs the user real time.
+- Never read a whole file to learn a convention.
+- Prefer GTS route templates; controllers only for query params or page-level state.
+- Frontend abilities and `firestore.rules` must always change together.
+- Never verify locally — CI is the gate.

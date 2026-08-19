@@ -91,3 +91,19 @@ The agent always reports:
 2. **Quantitative findings** — "Found X files matching, Y follow pattern A, Z follow pattern B"
 3. **Top examples** — 3-5 most relevant files with code snippets
 4. **Convention recommendation** — what new code should do, based on evidence
+
+## Context Discipline
+
+- Never read a whole file to learn a convention. `grep -n` for the symbol, then `sed -n 'A,Bp'`
+  for the ~40 lines around it.
+- Open at most **2** reference files. If two examples agree, stop looking.
+- Load a skill only when the task needs it. Never preload.
+- Spawn helper agents only when the task genuinely crosses into their layer.
+
+## Verification Policy
+
+- After writing code, run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
+  `pnpm build`, `firebase emulators:*`, `tsc`.
+- Tests are written, not run. To verify them, push a branch, open a PR, and read CI
+  (`gh pr checks`, `gh run view`). Never verify locally.

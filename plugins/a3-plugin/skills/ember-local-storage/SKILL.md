@@ -4,6 +4,7 @@ description: ember-local-storage-decorator reference — used in 32 A3 files for
 version: 0.1.0
 ---
 
+
 # ember-local-storage-decorator — Complete A3 Reference
 
 Used in 32 A3 files. The `@localStorage` decorator provides a simple, reactive way to persist
@@ -14,6 +15,18 @@ changes to localStorage-backed properties automatically trigger template re-rend
 **Import:** `import { localStorage } from 'ember-local-storage-decorator';`
 
 ---
+
+## How to use this skill
+
+This file is an **index**. The detail lives in `reference/` so you load only what the
+task needs. Find your topic below, read that one file, and stop. Never read the whole
+`reference/` directory, and never read a reference file "for background".
+
+| File | Covers |
+|------|--------|
+| `reference/02-api-reference.md` | API Reference |
+| `reference/04-a3-usage-patterns.md` | A3 Usage Patterns |
+| `reference/08-testing.md` | Testing |
 
 ## Core Concept
 
@@ -28,61 +41,6 @@ This is the A3 standard for persisting UI preferences that should survive page r
 but do not belong in the database (they are user-device-specific, not user-account-specific).
 
 ---
-
-## API Reference
-
-### `@localStorage` Decorator
-
-**Signature:**
-```ts
-@localStorage(key?: string) propertyName: Type = defaultValue;
-```
-
-**Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `key` | `string` | No | localStorage key. Defaults to the property name if omitted |
-
-**Behavior:**
-- On first access, reads from `localStorage.getItem(key)`
-- If found, deserializes with `JSON.parse` and returns the stored value
-- If not found (or parse fails), returns the default value
-- On set, serializes with `JSON.stringify` and calls `localStorage.setItem(key, value)`
-- Setting to `undefined` or the default value may remove the key (implementation-dependent)
-
-### Basic Usage
-
-```ts
-import Component from '@glimmer/component';
-import { localStorage } from 'ember-local-storage-decorator';
-
-export default class SidebarComponent extends Component {
-  @localStorage('sidebar-collapsed')
-  isCollapsed: boolean = false;
-}
-```
-
-In this example:
-- The property `isCollapsed` is backed by the localStorage key `"sidebar-collapsed"`
-- Default value is `false`
-- If the user previously collapsed the sidebar, the stored `true` value is restored on reload
-- Any change to `this.isCollapsed` is automatically persisted
-
-### Without Explicit Key
-
-When no key argument is provided, the property name is used as the localStorage key:
-
-```ts
-export default class ThemeComponent extends Component {
-  @localStorage
-  darkMode: boolean = false;
-  // localStorage key: "darkMode"
-}
-```
-
----
-
 ## Supported Value Types
 
 The `@localStorage` decorator serializes values with `JSON.stringify` and deserializes with
@@ -164,313 +122,6 @@ lastSelectedId: string | null = null;
 ```
 
 ---
-
-## A3 Usage Patterns
-
-### Pattern 1: Sidebar Collapse State
-
-The most common usage in A3 — persisting sidebar collapsed/expanded state:
-
-```gts
-import Component from '@glimmer/component';
-import { localStorage } from 'ember-local-storage-decorator';
-import { action } from '@ember/object';
-import { on } from '@ember/modifier';
-
-export default class AppSidebar extends Component {
-  @localStorage('sidebar-collapsed')
-  isCollapsed: boolean = false;
-
-  @action
-  toggleSidebar() {
-    this.isCollapsed = !this.isCollapsed;
-  }
-
-  <template>
-    <aside class={{if this.isCollapsed "sidebar sidebar--collapsed" "sidebar sidebar--expanded"}}>
-      <button
-        class="sidebar-toggle"
-        {{on "click" this.toggleSidebar}}
-        aria-label={{if this.isCollapsed "Expand sidebar" "Collapse sidebar"}}
-      >
-        {{if this.isCollapsed ">" "<"}}
-      </button>
-
-      {{#unless this.isCollapsed}}
-        <nav class="sidebar-nav">
-          {{yield}}
-        </nav>
-      {{/unless}}
-    </aside>
-  </template>
-}
-```
-
-### Pattern 2: Table Column Preferences
-
-Allowing users to show/hide columns and persisting their choice:
-
-```gts
-import Component from '@glimmer/component';
-import { localStorage } from 'ember-local-storage-decorator';
-import { action } from '@ember/object';
-
-interface ColumnConfig {
-  key: string;
-  label: string;
-  visible: boolean;
-}
-
-export default class EmployeeTable extends Component {
-  @localStorage('employee-table-columns')
-  savedColumns: string[] = ['name', 'email', 'department', 'status', 'hireDate'];
-
-  @localStorage('employee-table-sort')
-  sortConfig: { column: string; direction: 'asc' | 'desc' } = {
-    column: 'name',
-    direction: 'asc',
-  };
-
-  @localStorage('employee-table-page-size')
-  pageSize: number = 25;
-
-  get allColumns(): ColumnConfig[] {
-    return [
-      { key: 'name', label: 'Name', visible: this.savedColumns.includes('name') },
-      { key: 'email', label: 'Email', visible: this.savedColumns.includes('email') },
-      { key: 'department', label: 'Department', visible: this.savedColumns.includes('department') },
-      { key: 'status', label: 'Status', visible: this.savedColumns.includes('status') },
-      { key: 'hireDate', label: 'Hire Date', visible: this.savedColumns.includes('hireDate') },
-      { key: 'phone', label: 'Phone', visible: this.savedColumns.includes('phone') },
-      { key: 'location', label: 'Location', visible: this.savedColumns.includes('location') },
-      { key: 'manager', label: 'Manager', visible: this.savedColumns.includes('manager') },
-    ];
-  }
-
-  get visibleColumns(): ColumnConfig[] {
-    return this.allColumns.filter((col) => col.visible);
-  }
-
-  @action
-  toggleColumn(columnKey: string) {
-    const columns = [...this.savedColumns];
-    const index = columns.indexOf(columnKey);
-    if (index > -1) {
-      columns.splice(index, 1);
-    } else {
-      columns.push(columnKey);
-    }
-    this.savedColumns = columns; // Triggers localStorage write + re-render
-  }
-
-  @action
-  updateSort(column: string) {
-    if (this.sortConfig.column === column) {
-      this.sortConfig = {
-        column,
-        direction: this.sortConfig.direction === 'asc' ? 'desc' : 'asc',
-      };
-    } else {
-      this.sortConfig = { column, direction: 'asc' };
-    }
-  }
-
-  @action
-  updatePageSize(size: number) {
-    this.pageSize = size;
-  }
-}
-```
-
-### Pattern 3: User UI Preferences
-
-Collecting various user preferences in a single component or service:
-
-```ts
-// app/services/ui-preferences.ts
-import Service from '@ember/service';
-import { localStorage } from 'ember-local-storage-decorator';
-
-export default class UiPreferencesService extends Service {
-  @localStorage('pref-sidebar-collapsed')
-  sidebarCollapsed: boolean = false;
-
-  @localStorage('pref-dark-mode')
-  darkMode: boolean = false;
-
-  @localStorage('pref-compact-view')
-  compactView: boolean = false;
-
-  @localStorage('pref-items-per-page')
-  itemsPerPage: number = 25;
-
-  @localStorage('pref-date-format')
-  dateFormat: string = 'MMM D, YYYY';
-
-  @localStorage('pref-start-page')
-  startPage: string = 'dashboard';
-
-  @localStorage('pref-recent-employees')
-  recentEmployeeIds: string[] = [];
-
-  @localStorage('pref-favorite-reports')
-  favoriteReports: string[] = [];
-
-  addRecentEmployee(id: string) {
-    const recent = [id, ...this.recentEmployeeIds.filter((eid) => eid !== id)].slice(0, 10);
-    this.recentEmployeeIds = recent;
-  }
-
-  toggleFavoriteReport(reportId: string) {
-    const favorites = [...this.favoriteReports];
-    const index = favorites.indexOf(reportId);
-    if (index > -1) {
-      favorites.splice(index, 1);
-    } else {
-      favorites.push(reportId);
-    }
-    this.favoriteReports = favorites;
-  }
-}
-```
-
-### Pattern 4: Filter Panel State
-
-Persisting whether filter panels are expanded and what filters were last used:
-
-```gts
-import Component from '@glimmer/component';
-import { localStorage } from 'ember-local-storage-decorator';
-import { action } from '@ember/object';
-
-export default class EmployeeFilters extends Component {
-  @localStorage('employee-filters-expanded')
-  isExpanded: boolean = true;
-
-  @localStorage('employee-filters-department')
-  selectedDepartment: string = '';
-
-  @localStorage('employee-filters-status')
-  selectedStatus: string = 'active';
-
-  @localStorage('employee-filters-location')
-  selectedLocation: string = '';
-
-  @action
-  toggleExpanded() {
-    this.isExpanded = !this.isExpanded;
-  }
-
-  @action
-  updateDepartment(dept: string) {
-    this.selectedDepartment = dept;
-    this.args.onFilterChange?.(this.currentFilters);
-  }
-
-  @action
-  updateStatus(status: string) {
-    this.selectedStatus = status;
-    this.args.onFilterChange?.(this.currentFilters);
-  }
-
-  @action
-  clearFilters() {
-    this.selectedDepartment = '';
-    this.selectedStatus = 'active';
-    this.selectedLocation = '';
-    this.args.onFilterChange?.(this.currentFilters);
-  }
-
-  get currentFilters() {
-    return {
-      department: this.selectedDepartment,
-      status: this.selectedStatus,
-      location: this.selectedLocation,
-    };
-  }
-}
-```
-
-### Pattern 5: Tour/Onboarding Completion Tracking
-
-Tracking which tours or onboarding steps a user has completed:
-
-```ts
-import Service from '@ember/service';
-import { localStorage } from 'ember-local-storage-decorator';
-
-export default class OnboardingService extends Service {
-  @localStorage('completed-tours')
-  completedTours: string[] = [];
-
-  @localStorage('dismissed-banners')
-  dismissedBanners: string[] = [];
-
-  hasTourCompleted(tourId: string): boolean {
-    return this.completedTours.includes(tourId);
-  }
-
-  completeTour(tourId: string) {
-    if (!this.completedTours.includes(tourId)) {
-      this.completedTours = [...this.completedTours, tourId];
-    }
-  }
-
-  isBannerDismissed(bannerId: string): boolean {
-    return this.dismissedBanners.includes(bannerId);
-  }
-
-  dismissBanner(bannerId: string) {
-    if (!this.dismissedBanners.includes(bannerId)) {
-      this.dismissedBanners = [...this.dismissedBanners, bannerId];
-    }
-  }
-
-  resetAllTours() {
-    this.completedTours = [];
-  }
-}
-```
-
-### Pattern 6: Recently Viewed Items
-
-```ts
-import Service from '@ember/service';
-import { localStorage } from 'ember-local-storage-decorator';
-
-interface RecentItem {
-  id: string;
-  name: string;
-  type: string;
-  viewedAt: string; // ISO string (dates are stored as strings in JSON)
-}
-
-export default class RecentItemsService extends Service {
-  @localStorage('recent-items')
-  items: RecentItem[] = [];
-
-  addItem(id: string, name: string, type: string) {
-    const filtered = this.items.filter((item) => item.id !== id);
-    const updated = [
-      { id, name, type, viewedAt: new Date().toISOString() },
-      ...filtered,
-    ].slice(0, 20); // Keep last 20
-
-    this.items = updated;
-  }
-
-  getByType(type: string): RecentItem[] {
-    return this.items.filter((item) => item.type === type);
-  }
-
-  clear() {
-    this.items = [];
-  }
-}
-```
-
----
-
 ## Reactivity / Tracked Integration
 
 The `@localStorage` decorator integrates with Glimmer's tracking system. This means:
@@ -514,7 +165,6 @@ this.sortConfig = { ...this.sortConfig, direction: 'desc' };
 This is the single most common mistake with `@localStorage` in A3.
 
 ---
-
 ## Namespacing / Key Strategy
 
 ### Recommended Key Naming Convention for A3
@@ -550,7 +200,6 @@ Since localStorage is shared across the entire origin (domain + port):
 3. **Document all keys** in a central location to prevent accidental reuse.
 
 ---
-
 ## Clearing Storage
 
 ### Clear a Single Key
@@ -601,77 +250,6 @@ export default class UiPreferencesService extends Service {
 ```
 
 ---
-
-## Testing
-
-### Handling localStorage in Tests
-
-In tests, localStorage persists between test runs (within the same browser session). Always
-clean up in test setup/teardown:
-
-```ts
-// tests/helpers/setup-local-storage.ts
-export function setupLocalStorage(hooks: NestedHooks) {
-  hooks.beforeEach(function () {
-    // Store original state
-    this.originalStorage = { ...localStorage };
-    localStorage.clear();
-  });
-
-  hooks.afterEach(function () {
-    localStorage.clear();
-    // Restore original state if needed
-    Object.entries(this.originalStorage).forEach(([key, value]) => {
-      localStorage.setItem(key, value as string);
-    });
-  });
-}
-```
-
-### Seeding localStorage in Tests
-
-```ts
-import { module, test } from 'qunit';
-import { setupRenderingTest } from 'ember-qunit';
-import { render } from '@ember/test-helpers';
-
-module('Integration | Component | sidebar', function (hooks) {
-  setupRenderingTest(hooks);
-
-  hooks.beforeEach(function () {
-    localStorage.clear();
-  });
-
-  hooks.afterEach(function () {
-    localStorage.clear();
-  });
-
-  test('it restores collapsed state from localStorage', async function (assert) {
-    // Seed the stored state
-    localStorage.setItem('sidebar-collapsed', 'true');
-
-    await render(hbs`<AppSidebar />`);
-
-    assert.dom('.sidebar').hasClass('sidebar--collapsed');
-  });
-
-  test('it defaults to expanded when no stored state', async function (assert) {
-    await render(hbs`<AppSidebar />`);
-
-    assert.dom('.sidebar').hasClass('sidebar--expanded');
-  });
-
-  test('it persists collapsed state on toggle', async function (assert) {
-    await render(hbs`<AppSidebar />`);
-    await click('.sidebar-toggle');
-
-    assert.strictEqual(localStorage.getItem('sidebar-collapsed'), 'true');
-  });
-});
-```
-
----
-
 ## SSR / FastBoot Considerations
 
 `localStorage` is a browser-only API. It does not exist in Node.js / FastBoot environments.
@@ -693,7 +271,6 @@ Currently A3 does NOT use SSR, so this is not a concern, but it is worth noting 
 future-proofing.
 
 ---
-
 ## Storage Limits and Error Handling
 
 ### Browser Storage Limits
@@ -736,7 +313,6 @@ browsing mode. Modern browsers generally allow it but clear storage when the ses
 The `@localStorage` decorator handles this gracefully by falling back to in-memory storage.
 
 ---
-
 ## When NOT to Use @localStorage
 
 1. **Sensitive data** — Never store tokens, passwords, PII, or session data. Use secure cookies
@@ -755,7 +331,6 @@ The `@localStorage` decorator handles this gracefully by falling back to in-memo
    strings), `undefined` (dropped by JSON.stringify), circular references.
 
 ---
-
 ## @localStorage vs @tracked vs Firestore
 
 | Concern | `@tracked` | `@localStorage` | Firestore |
@@ -774,7 +349,6 @@ The `@localStorage` decorator handles this gracefully by falling back to in-memo
 - "Is this sensitive data (PII, auth)?" Yes -> Server/secure cookies. No -> `@localStorage` is fine.
 
 ---
-
 ## Quick Reference
 
 ```ts

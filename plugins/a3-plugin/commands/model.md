@@ -19,7 +19,7 @@ STOP if this fails — user needs GitHub access to trusted-american/a3.
 
 1. **Understand the request**: New model, modify existing, or data layer advice
 2. **Read base.ts**: Understand the base model pattern
-3. **Investigate A3**: Read 2-3 similar models for conventions
+3. **Investigate A3**: `grep -n` for 1-2 similar models and read only the relevant range
 4. **Ask clarifying questions**:
    - What Firestore collection name?
    - What fields and types?
@@ -34,3 +34,19 @@ STOP if this fails — user needs GitHub access to trusted-american/a3.
 ## When to Escalate
 
 If the model needs Firestore rules, Cloud Function triggers, or new routes, suggest `/orchestrate`.
+
+## Context Discipline
+
+- Never read a whole file to learn a convention. `grep -n` for the symbol, then `sed -n 'A,Bp'`
+  for the ~40 lines around it.
+- Open at most **2** reference files. If two examples agree, stop looking.
+- Load a skill only when the task needs it. Never preload.
+- Spawn helper agents only when the task genuinely crosses into their layer.
+
+## Verification Policy
+
+- After writing code, run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
+  `pnpm build`, `firebase emulators:*`, `tsc`.
+- Tests are written, not run. To verify them, push a branch, open a PR, and read CI
+  (`gh pr checks`, `gh run view`). Never verify locally.

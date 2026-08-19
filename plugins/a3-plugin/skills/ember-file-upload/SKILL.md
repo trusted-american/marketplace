@@ -4,7 +4,21 @@ description: ember-file-upload reference — file upload with drag-drop, progres
 version: 0.1.0
 ---
 
+
 # ember-file-upload Reference
+
+## How to use this skill
+
+This file is an **index**. The detail lives in `reference/` so you load only what the
+task needs. Find your topic below, read that one file, and stop. Never read the whole
+`reference/` directory, and never read a reference file "for background".
+
+| File | Covers |
+|------|--------|
+| `reference/04-filedropzone-component.md` | FileDropzone Component |
+| `reference/06-file-validation.md` | File Validation |
+| `reference/07-upload-to-firebase-cloud-storage-a3-pattern.md` | Upload to Firebase Cloud Storage (A3 Pattern) |
+| `reference/11-full-component-example.md` | Full Component Example |
 
 ## Overview
 
@@ -13,7 +27,6 @@ version: 0.1.0
 **Package**: `ember-file-upload`
 **Version**: 8.x (Ember 5+ compatible, Glimmer components)
 **Import**: `import { FileUpload, FileDropzone, Queue } from 'ember-file-upload';`
-
 ## Core Concepts
 
 ### File Queue
@@ -59,7 +72,6 @@ interface UploadFile {
   readAsText(): Promise<string>;
 }
 ```
-
 ## FileUpload Component
 
 The `FileUpload` component renders a file input trigger (button or clickable area):
@@ -103,79 +115,6 @@ The component yields an object with:
   selectFiles: ModifierLike;  // Apply to an element to make it trigger file selection
 }
 ```
-
-## FileDropzone Component
-
-The `FileDropzone` component creates a drag-and-drop zone:
-
-```gts
-import { FileDropzone } from 'ember-file-upload';
-
-<template>
-  <FileDropzone
-    @queue={{this.queue}}
-    @onFileAdded={{this.handleFileAdded}}
-    @accept="application/pdf,image/*"
-    @multiple={{true}}
-    as |dropzone|
-  >
-    <div
-      class="dropzone-area {{if dropzone.active 'dropzone-active'}} {{if dropzone.supported 'dropzone-supported'}}"
-    >
-      {{#if dropzone.active}}
-        <p>Drop files here to upload</p>
-      {{else}}
-        <p>Drag files here or</p>
-        <FileUpload
-          @queue={{this.queue}}
-          @onFileAdded={{this.handleFileAdded}}
-          @accept="application/pdf,image/*"
-          @multiple={{true}}
-          as |upload|
-        >
-          <button type="button" class="btn btn-primary" {{upload.selectFiles}}>
-            Browse Files
-          </button>
-        </FileUpload>
-      {{/if}}
-    </div>
-  </FileDropzone>
-</template>
-```
-
-### FileDropzone Yielded API
-
-```typescript
-{
-  active: boolean;      // true when files are dragged over the zone
-  supported: boolean;   // true if the browser supports drag-and-drop
-  queue: Queue;         // Reference to the queue
-}
-```
-
-### Dropzone Styling
-
-```css
-.dropzone-area {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
-  transition: all 0.2s ease;
-  background: #fafafa;
-}
-
-.dropzone-area.dropzone-active {
-  border-color: #4A90D9;
-  background: #e8f0fe;
-}
-
-.dropzone-area.dropzone-supported:hover {
-  border-color: #999;
-  cursor: pointer;
-}
-```
-
 ## Upload Progress Tracking
 
 Track upload progress for individual files and the entire queue:
@@ -221,175 +160,6 @@ Track upload progress for individual files and the entire queue:
   {{/if}}
 </template>
 ```
-
-## File Validation
-
-### Size Validation
-
-```typescript
-handleFileAdded = (file: UploadFile) => {
-  const maxSize = 10 * 1024 * 1024; // 10 MB
-
-  if (file.size > maxSize) {
-    this.flashMessages.danger(
-      this.intl.t('messages.fileTooLarge', {
-        name: file.name,
-        max: '10 MB',
-      })
-    );
-    file.queue.remove(file);
-    return;
-  }
-
-  this.uploadFileTask.perform(file);
-};
-```
-
-### Type Validation
-
-```typescript
-handleFileAdded = (file: UploadFile) => {
-  const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
-
-  if (!allowedTypes.includes(file.type)) {
-    this.flashMessages.danger(
-      this.intl.t('messages.invalidFileType', { name: file.name })
-    );
-    file.queue.remove(file);
-    return;
-  }
-
-  this.uploadFileTask.perform(file);
-};
-```
-
-### Count Validation
-
-```typescript
-handleFileAdded = (file: UploadFile) => {
-  const maxFiles = 5;
-
-  if (this.queue.files.length > maxFiles) {
-    this.flashMessages.danger(
-      this.intl.t('messages.tooManyFiles', { max: maxFiles })
-    );
-    file.queue.remove(file);
-    return;
-  }
-
-  this.uploadFileTask.perform(file);
-};
-```
-
-### Combined Validation Helper
-
-```typescript
-validateFile(file: UploadFile): { valid: boolean; error?: string } {
-  const maxSize = 10 * 1024 * 1024;
-  const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/gif'];
-  const maxFiles = 10;
-
-  if (file.size > maxSize) {
-    return { valid: false, error: `File "${file.name}" exceeds 10 MB limit` };
-  }
-
-  if (!allowedTypes.includes(file.type)) {
-    return { valid: false, error: `File "${file.name}" has unsupported type: ${file.type}` };
-  }
-
-  if (this.queue.files.length > maxFiles) {
-    return { valid: false, error: `Maximum ${maxFiles} files allowed` };
-  }
-
-  return { valid: true };
-}
-```
-
-## Upload to Firebase Cloud Storage (A3 Pattern)
-
-A3 uploads files to Firebase Cloud Storage using the Firebase SDK, NOT the built-in `file.upload()` HTTP method. The `UploadFile` object provides the native `File` for use with the Firebase `uploadBytesResumable` API.
-
-### Upload Pattern
-
-```typescript
-import Component from '@glimmer/component';
-import { service } from '@ember/service';
-import { tracked } from '@glimmer/tracking';
-import { task } from 'ember-concurrency';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import type UploadFile from 'ember-file-upload/upload-file';
-
-export default class DocumentUploadComponent extends Component {
-  @service('flash-messages') declare flashMessages: FlashMessageService;
-  @service declare intl: IntlService;
-  @service declare fileQueue: FileQueueService;
-
-  @tracked uploadedUrl: string | null = null;
-
-  get queue() {
-    return this.fileQueue.findOrCreate('documents');
-  }
-
-  handleFileAdded = (file: UploadFile) => {
-    const validation = this.validateFile(file);
-    if (!validation.valid) {
-      this.flashMessages.danger(validation.error!);
-      file.queue.remove(file);
-      return;
-    }
-    this.uploadTask.perform(file);
-  };
-
-  uploadTask = task(async (file: UploadFile) => {
-    try {
-      const storage = getStorage();
-      const storagePath = `clients/${this.args.clientId}/documents/${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, storagePath);
-
-      const uploadTask = uploadBytesResumable(storageRef, file.file, {
-        contentType: file.type,
-        customMetadata: {
-          originalName: file.name,
-          uploadedBy: this.args.currentUserId,
-        },
-      });
-
-      // Track progress manually since we are not using file.upload()
-      await new Promise<void>((resolve, reject) => {
-        uploadTask.on(
-          'state_changed',
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            // Update UI with progress
-            this.uploadProgress = Math.round(progress);
-          },
-          (error) => reject(error),
-          () => resolve(),
-        );
-      });
-
-      const downloadUrl = await getDownloadURL(storageRef);
-      this.uploadedUrl = downloadUrl;
-
-      // Save the document reference to Firestore
-      const doc = this.store.createRecord('document', {
-        name: file.name,
-        url: downloadUrl,
-        storagePath,
-        contentType: file.type,
-        size: file.size,
-        client: this.args.model,
-      });
-      await doc.save();
-
-      this.flashMessages.success(this.intl.t('messages.fileUploaded', { name: file.name }));
-    } catch (error) {
-      this.flashMessages.danger(this.intl.t('messages.uploadFailed', { name: file.name }));
-    }
-  }).enqueue();
-}
-```
-
 ## Design System Wrappers
 
 ### Form::FileInput
@@ -423,7 +193,6 @@ A styled drag-and-drop zone with label and error support:
   @errors={{this.uploadErrors}}
 />
 ```
-
 ## Reading File Contents for Preview
 
 Preview images or read file contents before uploading:
@@ -469,7 +238,6 @@ handlePdfAdded = async (file: UploadFile) => {
   this.pdfPreviewUrl = URL.createObjectURL(blob);
 };
 ```
-
 ## Queue Management
 
 ### Clearing the Queue
@@ -496,92 +264,6 @@ this.queue.size;        // Total size of all files in bytes
 this.queue.loaded;      // Total bytes uploaded across all files
 this.queue.progress;    // Overall progress 0-100
 ```
-
-## Full Component Example
-
-```gts
-import Component from '@glimmer/component';
-import { service } from '@ember/service';
-import { tracked } from '@glimmer/tracking';
-import { task } from 'ember-concurrency';
-import { FileUpload, FileDropzone } from 'ember-file-upload';
-import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
-
-export default class DocumentUploader extends Component {
-  @service declare fileQueue: FileQueueService;
-  @service('flash-messages') declare flashMessages: FlashMessageService;
-
-  @tracked uploadProgress = 0;
-
-  get queue() {
-    return this.fileQueue.findOrCreate('client-documents');
-  }
-
-  handleFileAdded = (file: UploadFile) => {
-    if (file.size > 10 * 1024 * 1024) {
-      this.flashMessages.danger('File exceeds 10 MB limit');
-      file.queue.remove(file);
-      return;
-    }
-    this.uploadTask.perform(file);
-  };
-
-  uploadTask = task(async (file: UploadFile) => {
-    // Upload to Firebase Cloud Storage...
-  }).enqueue();
-
-  removeFile = (file: UploadFile) => {
-    file.queue.remove(file);
-  };
-
-  <template>
-    <FileDropzone
-      @queue={{this.queue}}
-      @onFileAdded={{this.handleFileAdded}}
-      @accept=".pdf,image/*"
-      @multiple={{true}}
-      as |dropzone|
-    >
-      <div class="dropzone-area {{if dropzone.active 'active'}}">
-        {{#if dropzone.active}}
-          <p>Drop files here</p>
-        {{else}}
-          <Icon @icon="cloud-arrow-up" class="fs-1 text-muted mb-2" />
-          <p>Drag files here or click to browse</p>
-          <FileUpload
-            @queue={{this.queue}}
-            @onFileAdded={{this.handleFileAdded}}
-            @accept=".pdf,image/*"
-            @multiple={{true}}
-            as |upload|
-          >
-            <button type="button" class="btn btn-primary" {{upload.selectFiles}}>
-              Browse Files
-            </button>
-          </FileUpload>
-        {{/if}}
-      </div>
-    </FileDropzone>
-
-    {{#each this.queue.files as |file|}}
-      <div class="d-flex align-items-center mt-2">
-        <span class="me-2">{{file.name}}</span>
-        <span class="badge bg-secondary me-2">{{file.state}}</span>
-        {{#if (eq file.state 'uploading')}}
-          <div class="progress flex-grow-1 me-2">
-            <div class="progress-bar" style="width: {{file.progress}}%"></div>
-          </div>
-        {{/if}}
-        <button type="button" class="btn btn-sm btn-outline-danger" {{on "click" (fn this.removeFile file)}}>
-          <Icon @icon="xmark" />
-        </button>
-      </div>
-    {{/each}}
-  </template>
-}
-```
-
 ## Further Investigation
 
 - **ember-file-upload Docs**: https://ember-file-upload.pages.dev/
