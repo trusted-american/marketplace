@@ -4,11 +4,25 @@ description: Mailgun email service reference — send-email utility + domains en
 version: 0.1.0
 ---
 
+
 # Mailgun Email Service Reference
 
 A3 integrates Mailgun for transactional email delivery, template-based emails, domain management, and event tracking. This skill covers the send-email utility, domains endpoint, frontend mailgun.js integration, Firestore-triggered emails, batch sending, and event/webhook handling.
 
 ---
+
+## How to use this skill
+
+This file is an **index**. The detail lives in `reference/` so you load only what the
+task needs. Find your topic below, read that one file, and stop. Never read the whole
+`reference/` directory, and never read a reference file "for background".
+
+| File | Covers |
+|------|--------|
+| `reference/02-send-email-utility-utils-send-email-ts.md` | Send Email Utility — `utils/send-email.ts` |
+| `reference/03-firestore-triggered-emails.md` | Firestore-Triggered Emails |
+| `reference/04-domain-management-domains-ts.md` | Domain Management — `domains.ts` |
+| `reference/05-event-tracking-webhooks-events-ts.md` | Event Tracking / Webhooks — `events.ts` |
 
 ## Architecture Overview
 
@@ -48,479 +62,6 @@ export default mg;
 - **Domain**: Each organization can have its own sending domain, or use A3's default domain.
 
 ---
-
-## Send Email Utility — `utils/send-email.ts`
-
-### Basic Send
-
-```typescript
-export async function sendEmail(options: {
-  to: string | string[];
-  subject: string;
-  text?: string;
-  html?: string;
-  from?: string;
-  replyTo?: string;
-  cc?: string | string[];
-  bcc?: string | string[];
-  attachments?: Array<{ filename: string; data: Buffer; contentType: string }>;
-  tags?: string[];
-  metadata?: Record<string, string>;
-  domain?: string;
-}) {
-  const domain = options.domain || process.env.MAILGUN_DOMAIN!;
-  const from = options.from || `A3 <noreply@${domain}>`;
-
-  const messageData: any = {
-    from,
-    to: Array.isArray(options.to) ? options.to.join(',') : options.to,
-    subject: options.subject,
-  };
-
-  if (options.text) messageData.text = options.text;
-  if (options.html) messageData.html = options.html;
-  if (options.replyTo) messageData['h:Reply-To'] = options.replyTo;
-  if (options.cc) messageData.cc = Array.isArray(options.cc) ? options.cc.join(',') : options.cc;
-  if (options.bcc) messageData.bcc = Array.isArray(options.bcc) ? options.bcc.join(',') : options.bcc;
-  if (options.tags) messageData['o:tag'] = options.tags;
-  if (options.metadata) {
-    for (const [key, value] of Object.entries(options.metadata)) {
-      messageData[`v:${key}`] = value;
-    }
-  }
-
-  // Handle attachments
-  if (options.attachments?.length) {
-    messageData.attachment = options.attachments.map((att) => ({
-      filename: att.filename,
-      data: att.data,
-      contentType: att.contentType,
-    }));
-  }
-
-  const result = await mg.messages.create(domain, messageData);
-  return result;
-  // result: { id: '<message-id@domain>', message: 'Queued. Thank you.' }
-}
-```
-
-### Template-Based Send
-
-Mailgun supports stored templates. A3 uses these for consistent branding:
-
-```typescript
-export async function sendTemplateEmail(options: {
-  to: string | string[];
-  template: string;
-  variables: Record<string, string>;
-  subject: string;
-  from?: string;
-  domain?: string;
-  tags?: string[];
-}) {
-  const domain = options.domain || process.env.MAILGUN_DOMAIN!;
-  const from = options.from || `A3 <noreply@${domain}>`;
-
-  const messageData: any = {
-    from,
-    to: Array.isArray(options.to) ? options.to.join(',') : options.to,
-    subject: options.subject,
-    template: options.template,
-    'h:X-Mailgun-Variables': JSON.stringify(options.variables),
-  };
-
-  if (options.tags) messageData['o:tag'] = options.tags;
-
-  const result = await mg.messages.create(domain, messageData);
-  return result;
-}
-```
-
-### Template Variables
-
-Templates use Handlebars syntax. A3 defines these standard templates:
-
-| Template Name | Variables | Purpose |
-|---|---|---|
-| `welcome` | `{{firstName}}`, `{{loginUrl}}` | New user welcome email |
-| `password-reset` | `{{firstName}}`, `{{resetUrl}}`, `{{expiryTime}}` | Password reset link |
-| `invoice-created` | `{{clientName}}`, `{{invoiceNumber}}`, `{{amount}}`, `{{dueDate}}`, `{{viewUrl}}` | Invoice notification |
-| `deal-assigned` | `{{userName}}`, `{{dealTitle}}`, `{{clientName}}`, `{{dealUrl}}` | Deal assignment notification |
-| `document-signed` | `{{recipientName}}`, `{{documentName}}`, `{{downloadUrl}}` | PandaDoc completion notice |
-| `payment-received` | `{{clientName}}`, `{{amount}}`, `{{invoiceNumber}}` | Payment confirmation |
-| `subscription-expiring` | `{{userName}}`, `{{planName}}`, `{{expiryDate}}`, `{{renewUrl}}` | Subscription renewal reminder |
-
-### Usage Example
-
-```typescript
-await sendTemplateEmail({
-  to: client.email,
-  template: 'invoice-created',
-  subject: `Invoice #${invoice.number} from ${organization.name}`,
-  variables: {
-    clientName: client.displayName,
-    invoiceNumber: invoice.number,
-    amount: formatCurrency(invoice.amount),
-    dueDate: formatDate(invoice.dueDate),
-    viewUrl: `${baseUrl}/invoices/${invoice.id}`,
-  },
-  tags: ['invoice', 'transactional'],
-});
-```
-
----
-
-## Firestore-Triggered Emails
-
-A3 uses Firestore triggers to automatically send emails based on data changes.
-
-### Email Queue Pattern
-
-```typescript
-// functions/src/triggers/email-triggers.ts
-import * as functions from 'firebase-functions';
-import { sendEmail, sendTemplateEmail } from '../utils/send-email';
-
-// Trigger: new document in email_queue collection
-export const processEmailQueue = functions.firestore
-  .document('organizations/{orgId}/email_queue/{emailId}')
-  .onCreate(async (snapshot, context) => {
-    const email = snapshot.data();
-    const { orgId, emailId } = context.params;
-
-    try {
-      let result;
-
-      if (email.template) {
-        result = await sendTemplateEmail({
-          to: email.to,
-          template: email.template,
-          variables: email.variables || {},
-          subject: email.subject,
-          from: email.from,
-          tags: email.tags || [],
-        });
-      } else {
-        result = await sendEmail({
-          to: email.to,
-          subject: email.subject,
-          html: email.html,
-          text: email.text,
-          from: email.from,
-          tags: email.tags || [],
-        });
-      }
-
-      // Mark as sent
-      await snapshot.ref.update({
-        status: 'sent',
-        mailgunId: result.id,
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    } catch (err: any) {
-      // Mark as failed
-      await snapshot.ref.update({
-        status: 'failed',
-        error: err.message,
-        failedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-  });
-```
-
-### Direct Trigger Pattern
-
-Some events trigger emails directly without the queue:
-
-```typescript
-// When a deal is assigned, email the assignee
-export const onDealAssigned = functions.firestore
-  .document('organizations/{orgId}/deals/{dealId}')
-  .onUpdate(async (change, context) => {
-    const before = change.before.data();
-    const after = change.after.data();
-
-    // Only trigger if assignedTo changed
-    if (before.assignedTo === after.assignedTo) return;
-    if (!after.assignedTo) return;
-
-    const assignee = await admin.auth().getUser(after.assignedTo);
-
-    await sendTemplateEmail({
-      to: assignee.email!,
-      template: 'deal-assigned',
-      subject: `New deal assigned: ${after.title}`,
-      variables: {
-        userName: assignee.displayName || 'Team member',
-        dealTitle: after.title,
-        clientName: after.clientName,
-        dealUrl: `${baseUrl}/deals/${context.params.dealId}`,
-      },
-      tags: ['deal-assignment', 'notification'],
-    });
-  });
-```
-
----
-
-## Domain Management — `domains.ts`
-
-### List Domains
-
-```typescript
-// GET /mailgun/domains — List configured domains
-export async function listDomains(req: Request, res: Response) {
-  const result = await mg.domains.list();
-  return res.json(result);
-  // Returns: { items: [{ name, state, type, ... }], total_count }
-}
-```
-
-### Get Domain Details
-
-```typescript
-// GET /mailgun/domains/:domain — Get domain info and DNS records
-export async function getDomain(req: Request, res: Response) {
-  const { domain } = req.params;
-  const result = await mg.domains.get(domain);
-  return res.json(result);
-  // Returns: { domain: { name, state, ... }, receiving_dns_records, sending_dns_records }
-}
-```
-
-### Add Domain
-
-```typescript
-// POST /mailgun/domains — Add a new sending domain
-export async function addDomain(req: Request, res: Response) {
-  const { domain, dkimKeySize } = req.body;
-
-  const result = await mg.domains.create({
-    name: domain,
-    spam_action: 'disabled',
-    dkim_key_size: dkimKeySize || 2048,
-    web_scheme: 'https',
-    wildcard: false,
-  });
-
-  return res.json(result);
-  // Returns domain info + required DNS records for verification
-}
-```
-
-### Verify Domain
-
-```typescript
-// POST /mailgun/domains/:domain/verify — Trigger DNS verification
-export async function verifyDomain(req: Request, res: Response) {
-  const { domain } = req.params;
-  const result = await mg.domains.verify(domain);
-  return res.json(result);
-  // Mailgun re-checks DNS records; state becomes 'active' if verified
-}
-```
-
-### Domain States
-
-| State | Meaning |
-|---|---|
-| `active` | Domain verified and ready for sending |
-| `unverified` | DNS records not yet confirmed |
-| `disabled` | Domain disabled by Mailgun (abuse, etc.) |
-
-### Required DNS Records
-
-When adding a domain, Mailgun requires these DNS records:
-
-| Record Type | Purpose | Example |
-|---|---|---|
-| TXT | SPF verification | `v=spf1 include:mailgun.org ~all` |
-| TXT | DKIM signing | `k=rsa; p=MIGfMA0G...` |
-| CNAME | Tracking (opens/clicks) | `mailgun.org` |
-| MX (optional) | Receiving email | `mxa.mailgun.org` / `mxb.mailgun.org` |
-
----
-
-## Event Tracking / Webhooks — `events.ts`
-
-### Webhook Receiver
-
-```typescript
-// POST /mailgun/events — Webhook endpoint for Mailgun events
-export async function handleMailgunWebhook(req: Request, res: Response) {
-  const { signature, 'event-data': eventData } = req.body;
-
-  // Verify webhook signature
-  if (!verifyMailgunSignature(signature)) {
-    return res.status(401).json({ error: 'Invalid signature' });
-  }
-
-  const event = eventData.event;
-  const messageId = eventData.message?.headers?.['message-id'];
-  const recipient = eventData.recipient;
-
-  switch (event) {
-    case 'delivered':
-      await handleDelivered(eventData);
-      break;
-    case 'opened':
-      await handleOpened(eventData);
-      break;
-    case 'clicked':
-      await handleClicked(eventData);
-      break;
-    case 'failed':
-      await handleFailed(eventData);
-      break;
-    case 'complained':
-      await handleComplained(eventData);
-      break;
-    case 'unsubscribed':
-      await handleUnsubscribed(eventData);
-      break;
-    default:
-      console.log(`Unhandled Mailgun event: ${event}`);
-  }
-
-  res.status(200).json({ received: true });
-}
-```
-
-### Signature Verification
-
-```typescript
-import crypto from 'crypto';
-
-function verifyMailgunSignature(signature: {
-  timestamp: string;
-  token: string;
-  signature: string;
-}): boolean {
-  const signingKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY!;
-
-  const encodedToken = crypto
-    .createHmac('sha256', signingKey)
-    .update(signature.timestamp.concat(signature.token))
-    .digest('hex');
-
-  return encodedToken === signature.signature;
-}
-```
-
-### Event Handlers
-
-```typescript
-async function handleDelivered(eventData: any) {
-  const messageId = eventData.message?.headers?.['message-id'];
-  const recipient = eventData.recipient;
-
-  await admin.firestore().collection('email_events').add({
-    event: 'delivered',
-    messageId,
-    recipient,
-    timestamp: new Date(eventData.timestamp * 1000),
-    deliveryStatus: eventData['delivery-status'],
-  });
-
-  // Update email_queue record if it exists
-  const emailQuery = await admin.firestore()
-    .collectionGroup('email_queue')
-    .where('mailgunId', '==', `<${messageId}>`)
-    .limit(1)
-    .get();
-
-  if (!emailQuery.empty) {
-    await emailQuery.docs[0].ref.update({
-      deliveredAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-  }
-}
-
-async function handleFailed(eventData: any) {
-  const severity = eventData.severity; // 'temporary' or 'permanent'
-  const reason = eventData.reason;
-  const recipient = eventData.recipient;
-
-  await admin.firestore().collection('email_events').add({
-    event: 'failed',
-    severity,
-    reason,
-    recipient,
-    timestamp: new Date(eventData.timestamp * 1000),
-    errorCode: eventData['delivery-status']?.code,
-    errorMessage: eventData['delivery-status']?.message,
-  });
-
-  if (severity === 'permanent') {
-    // Mark recipient as bounced — do not send future emails
-    await markEmailBounced(recipient);
-  }
-}
-
-async function handleComplained(eventData: any) {
-  const recipient = eventData.recipient;
-
-  // Spam complaint — suppress this email address
-  await admin.firestore().collection('email_suppressions').doc(recipient).set({
-    reason: 'complaint',
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-  });
-}
-
-async function handleUnsubscribed(eventData: any) {
-  const recipient = eventData.recipient;
-
-  await admin.firestore().collection('email_suppressions').doc(recipient).set({
-    reason: 'unsubscribed',
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-  });
-}
-
-async function handleOpened(eventData: any) {
-  const messageId = eventData.message?.headers?.['message-id'];
-
-  await admin.firestore().collection('email_events').add({
-    event: 'opened',
-    messageId,
-    recipient: eventData.recipient,
-    timestamp: new Date(eventData.timestamp * 1000),
-    ip: eventData.ip,
-    userAgent: eventData['user-agent'],
-    geolocation: eventData.geolocation,
-  });
-}
-
-async function handleClicked(eventData: any) {
-  const messageId = eventData.message?.headers?.['message-id'];
-
-  await admin.firestore().collection('email_events').add({
-    event: 'clicked',
-    messageId,
-    recipient: eventData.recipient,
-    url: eventData.url,
-    timestamp: new Date(eventData.timestamp * 1000),
-    ip: eventData.ip,
-    userAgent: eventData['user-agent'],
-  });
-}
-```
-
-### Mailgun Event Types
-
-| Event | Description | A3 Action |
-|---|---|---|
-| `accepted` | Mailgun accepted the message | Log |
-| `delivered` | Message delivered to recipient's SMTP server | Update status |
-| `opened` | Recipient opened the email (pixel tracking) | Log for analytics |
-| `clicked` | Recipient clicked a link | Log for analytics |
-| `failed` (temporary) | Temporary delivery failure (retry) | Log, Mailgun retries |
-| `failed` (permanent) | Permanent failure (bounce) | Suppress email address |
-| `complained` | Recipient marked as spam | Suppress email address |
-| `unsubscribed` | Recipient clicked unsubscribe | Suppress email address |
-| `stored` | Message stored (when using routes) | N/A in A3 |
-
----
-
 ## Batch Sending
 
 For sending to multiple recipients (e.g., marketing, notifications):
@@ -573,7 +114,6 @@ messageData['o:deliverytime'] = new Date(Date.now() + 2 * 60 * 60 * 1000).toUTCS
 ```
 
 ---
-
 ## Frontend Mailgun Service — `app/services/mailgun.js`
 
 The frontend service does not call Mailgun directly. It sends email requests to the A3 backend.
@@ -616,7 +156,6 @@ export default class MailgunService extends Service {
 ```
 
 ---
-
 ## Suppression Management
 
 A3 checks the suppression list before sending to prevent bounces and complaints:
@@ -654,7 +193,6 @@ const unsubscribes = await mg.suppressions.list(domain, 'unsubscribes', { addres
 ```
 
 ---
-
 ## Error Handling
 
 ```typescript
@@ -684,7 +222,6 @@ try {
 ```
 
 ---
-
 ## Environment Variables Required
 
 | Variable | Description |
@@ -694,7 +231,6 @@ try {
 | `MAILGUN_WEBHOOK_SIGNING_KEY` | Webhook signing key for signature verification |
 
 ---
-
 ## Common Patterns and Best Practices
 
 1. **Always check suppressions**: Before sending, check the suppression list. Sending to bounced/complained addresses damages domain reputation.

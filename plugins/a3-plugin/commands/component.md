@@ -18,7 +18,7 @@ STOP if this fails — user needs GitHub access to trusted-american/a3.
 ## Behavior
 
 1. **Understand the request**: Parse what the user needs — new component, modify existing, or advice
-2. **Investigate A3**: Read 2-3 similar existing components to understand conventions
+2. **Investigate A3**: Locate 1-2 similar existing components with `grep -n`, then read only the relevant range
 3. **Ask clarifying questions** if the request is ambiguous:
    - What data does this component receive?
    - Where does it live in the component hierarchy?
@@ -35,3 +35,19 @@ STOP if this fails — user needs GitHub access to trusted-american/a3.
 ## When to Escalate
 
 If the component task reveals that more is needed (new route, new model, backend changes), suggest the user run `/orchestrate` instead for full coordination.
+
+## Context Discipline
+
+- Never read a whole file to learn a convention. `grep -n` for the symbol, then `sed -n 'A,Bp'`
+  for the ~40 lines around it.
+- Open at most **2** reference files. If two examples agree, stop looking.
+- Load a skill only when the task needs it. Never preload.
+- Spawn helper agents only when the task genuinely crosses into their layer.
+
+## Verification Policy
+
+- After writing code, run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
+  `pnpm build`, `firebase emulators:*`, `tsc`.
+- Tests are written, not run. To verify them, push a branch, open a PR, and read CI
+  (`gh pr checks`, `gh run view`). Never verify locally.

@@ -121,3 +121,13 @@ After the final-reviewer completes, present the user with:
 - All tests must be independently runnable — no shared state between tests
 - Use `test.beforeEach` for common setup, never rely on test execution order
 - Respect any preferences from `.claude/playwright.local.md` if it exists in the project
+
+## Verification Policy
+
+- After writing or editing code, run the project's `lint` command **once**. Do not read,
+  parse, or act on its output, and never re-run it.
+- NEVER run tests, builds, type-checks, or dev servers locally — no `npx playwright test`,
+  `npm test`, `npm run build`, `tsc`, `dotnet test`.
+- Writing tests is encouraged; running them is not. To verify, push a branch, open a PR,
+  and read CI (`gh pr checks`, `gh run view`).
+- Never block on local verification and never call code "unverified" — state what CI covers.

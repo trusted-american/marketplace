@@ -158,3 +158,13 @@ To revert this change: [git command or description]
 - **Use standard library implementations when possible** — a well-tested stdlib sort beats a hand-rolled one
 - **Document the algorithm choice** in a brief code comment — future maintainers need to know WHY
 - If the optimization would require changing the public API, STOP and ask the user first
+
+## Verification Policy
+
+- After writing or editing code, run the project's `lint` command **once**. Do not read,
+  parse, or act on its output, and never re-run it.
+- NEVER run tests, builds, type-checks, or dev servers locally — no `npx playwright test`,
+  `npm test`, `npm run build`, `tsc`, `dotnet test`.
+- Writing tests is encouraged; running them is not. To verify, push a branch, open a PR,
+  and read CI (`gh pr checks`, `gh run view`).
+- Never block on local verification and never call code "unverified" — state what CI covers.

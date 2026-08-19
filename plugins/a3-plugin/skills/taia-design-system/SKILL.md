@@ -6,6 +6,10 @@ version: 0.1.0
 
 # TAIA Design System Reference
 
+> **Full signatures live in `reference/component-signatures.md`.** This file is the index —
+> component names, tokens, and import patterns. Read the reference file only when you need a
+> component's exact args or blocks, and read only that component's section.
+
 ## Overview
 
 The Trusted American Insurance Agency (TAIA) design system is a monorepo providing reusable UI components. A3 uses the Ember package (`@trusted-american/ember`).

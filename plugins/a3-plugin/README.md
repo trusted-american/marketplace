@@ -1,6 +1,8 @@
 # A3 Plugin
 
-Fullstack development agent for the A3 insurance platform. Orchestrates feature implementation across Ember.js, Firebase/Firestore, and GCP Cloud Functions with deep codebase knowledge and round-robin multi-agent review.
+Fullstack development agent for the A3 insurance platform. Orchestrates feature implementation
+across Ember.js, Firebase/Firestore, and GCP Cloud Functions with deep codebase knowledge and a
+targeted multi-agent review pass.
 
 ## Requirements
 
@@ -12,7 +14,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 
 | Command | Description |
 |---------|------------|
-| `/orchestrate <task>` | Full-ticket implementation — asks questions, delegates to specialists, round-robin review |
+| `/orchestrate <task>` | Full-ticket implementation — scopes fast, delegates to the specialists the task needs, one review pass |
 | `/component <description>` | Standalone Glimmer GTS component specialist |
 | `/route <description>` | Standalone route + GTS template specialist |
 | `/model <description>` | Standalone Ember Data model + adapter + serializer specialist |
@@ -22,7 +24,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 | `/integration <description>` | Cross-concern integration analysis and wiring |
 | `/design-system <description>` | TAIA design system component specialist |
 | `/example <what-to-find>` | Find real examples and conventions in the A3 codebase |
-| `/review [files]` | Round-robin review of all changes by every specialist agent |
+| `/review [files]` | Review the diff with the specialists whose domains it actually touches |
 
 ## Agents
 
@@ -43,15 +45,37 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 ## Pipeline
 
 ```
-1. REQUIREMENTS    User describes task → orchestrator asks deep questions
-2. DISCOVERY       example-finder searches A3 for similar patterns, counts conventions
-3. DECOMPOSITION   Break task into work items per specialist
-4. IMPLEMENTATION  Agents write code in dependency order (grounded in real examples):
+1. SCOPE           At most 3 questions, batched — skipped entirely for single-layer tasks
+2. INVESTIGATE     Targeted grep + ranged reads, budget of 3 files
+3. DELEGATE        Only the specialists whose layer the task touches:
                      Models → Functions + Abilities → Routes + Components + Design System → Integration → Tests
-5. ROUND-ROBIN     Every agent reviews every other agent's output
-6. ITERATION       Fix issues until ALL agents vote APPROVE
-7. DELIVERY        Present file manifest, write to repo
+4. REVIEW          code-reviewer + at most 2 domain reviewers, reviewing the diff
+5. ITERATE         2 rounds maximum, then the user decides
+6. DELIVER         File manifest, manual steps, offer to open a PR
 ```
+
+## Performance & Context Budget
+
+The plugin is tuned to stay fast and cheap:
+
+- **Skills are indexes, not dumps.** Oversized `SKILL.md` files were split into a small index
+  plus `reference/` sections, so invoking a skill loads ~5KB instead of up to 69KB. Read the
+  one reference file you need — never the directory.
+- **Fan-out is bounded.** `/orchestrate` spawns only the layers the task touches and reviews
+  with at most 3 agents; `/review` routes reviewers by changed path and caps the panel at 4.
+- **Reviews read `git diff`, not whole files.** Agents use `grep -n` plus ranged `sed -n`
+  reads and open at most 2 reference files per task.
+- **One access check per run.** The GitHub gate lives in the command, not in every agent.
+
+## Verification Policy
+
+CI verifies; the plugin does not.
+
+- After writing code, agents run `pnpm lint` **once** and ignore its output.
+- Tests, builds, type-checks, and emulators are **never** run locally — no `ember test`,
+  `ember-tsc`, `pnpm build`, `firebase emulators:*`.
+- Tests are written, not run. To verify them: push a branch, open a PR, and read CI with
+  `gh pr checks` / `gh run view`.
 
 ## Skills (Deep Knowledge)
 
@@ -91,7 +115,7 @@ Fullstack development agent for the A3 insurance platform. Orchestrates feature 
 
 ## Access Control
 
-This plugin requires authenticated GitHub access to the private `trusted-american/a3` repository. Every command verifies access before proceeding:
+This plugin requires authenticated GitHub access to the private `trusted-american/a3` repository. Commands verify access once at entry (spawned agents do not repeat the check):
 
 ```bash
 gh api repos/trusted-american/a3 --jq '.full_name'
