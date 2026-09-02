@@ -1,3 +1,21 @@
+# These are NOT git submodules — the gitlinks were deliberately removed.
+#
+# Upstream community/claude contains a stray nested gitlink
+# (.claude/worktrees/relaxed-leakey-44aace) with no .gitmodules entry of its
+# own. Any `git clone --recurse-submodules` of this repo therefore dies with
+# "No url found for submodule path ... in .gitmodules" while recursing into it,
+# and that is exactly how Claude Code fetches a marketplace, so
+# `/plugin marketplace add trusted-american/marketplace` was impossible.
+#
+# This file is now purely a source map. CI clones each `url` at `rev` into
+# `path` (tools/fetch-community.sh), and tools/lib/registry.js reads `url` to
+# emit `git-subdir` sources in .claude-plugin/marketplace.json. Keeping the
+# [submodule] shape means the generator and its tests are untouched.
+#
+# Bump `rev` to pick up upstream changes — .github/workflows/sync-community.yml
+# does this weekly and opens a PR.
+
 [submodule "community/claude"]
 	path = community/claude
 	url = https://github.com/markus41/claude
+	rev = 3678a0c7540f7541dfd2d8b6004573b5598849cf

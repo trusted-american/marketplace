@@ -48,3 +48,7 @@ temp/
 
 # Claude Code local settings (per-user, not shared)
 .claude/settings.local.json
+
+# Community upstreams — cloned by tools/fetch-community.sh, never committed
+# (committing them as gitlinks breaks `git clone --recurse-submodules`)
+/community/*/
