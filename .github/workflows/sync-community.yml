@@ -1,0 +1,82 @@
+name: Sync community upstreams
+
+on:
+  schedule:
+    # Every Monday at 6am UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Bump community/* pins
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Bump rev pins to upstream HEAD
+        id: bump
+        run: |
+          sections=$(
+            git config -f .gitmodules --name-only --get-regexp '^submodule\..*\.path$' |
+              sed 's/\.path$//'
+          )
+
+          for section in $sections; do
+            url=$(git config -f .gitmodules --get "$section.url")
+            old=$(git config -f .gitmodules --get "$section.rev")
+            new=$(git ls-remote "$url" HEAD | cut -f1)
+
+            if [ -z "$new" ]; then
+              echo "ERROR: could not resolve HEAD for $url"
+              exit 1
+            fi
+
+            if [ "$old" != "$new" ]; then
+              git config -f .gitmodules "$section.rev" "$new"
+              echo "$section: ${old:0:10} -> ${new:0:10}"
+            fi
+          done
+
+          if git diff --quiet .gitmodules; then
+            echo "All community upstreams already up to date"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch community upstreams
+        if: steps.bump.outputs.changed == 'true'
+        run: tools/fetch-community.sh
+
+      - name: Regenerate .claude-plugin/marketplace.json
+        if: steps.bump.outputs.changed == 'true'
+        run: node tools/generate-marketplace-json.js
+
+      - name: Open PR
+        if: steps.bump.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="chore/sync-community-$(date +%s)"
+          git checkout -b "$BRANCH"
+          git add .gitmodules .claude-plugin/marketplace.json
+          git commit -m "chore: sync community upstreams [skip ci]"
+          git push -u origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: sync community upstreams" \
+            --body "Bumps the \`rev\` pins in \`.gitmodules\` to upstream \`HEAD\` and regenerates \`.claude-plugin/marketplace.json\`." \
+            --base main \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
