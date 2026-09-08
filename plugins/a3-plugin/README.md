@@ -9,6 +9,28 @@ targeted multi-agent review pass.
 - Authenticated GitHub access to `trusted-american/a3` (private repo)
 - Run `gh auth login` if not already authenticated
 - A3 workspace available locally
+- Optional: `CONTEXT7_API_KEY` for higher Context7 rate limits (see Documentation Sources)
+
+## Configuration
+
+Optional per-project settings, read from `.claude/a3-plugin.local.md` in the **A3 repo**
+(not this one):
+
+```markdown
+---
+lint: true
+lint_command: pnpm lint
+---
+```
+
+| Setting | Default | Effect |
+|---------|---------|--------|
+| `lint` | `false` | Whether `/review` runs the linter at all |
+| `lint_command` | `pnpm lint` | Command used when lint is enabled |
+
+Precedence, first match wins: `--lint`/`--no-lint` on the command → this file → default off.
+
+Add `.claude/*.local.md` to the A3 repo's `.gitignore` — these settings are per-developer.
 
 ## Commands
 
@@ -24,7 +46,7 @@ targeted multi-agent review pass.
 | `/integration <description>` | Cross-concern integration analysis and wiring |
 | `/design-system <description>` | TAIA design system component specialist |
 | `/example <what-to-find>` | Find real examples and conventions in the A3 codebase |
-| `/review [files]` | Review the diff with the specialists whose domains it actually touches |
+| `/review [files] [--lint]` | Review the diff with the specialists whose domains it actually touches |
 
 ## Agents
 
@@ -71,11 +93,41 @@ The plugin is tuned to stay fast and cheap:
 
 CI verifies; the plugin does not.
 
-- After writing code, agents run `pnpm lint` **once** and ignore its output.
+- Lint is **opt-in and off by default**. When enabled it is actually read, and failures
+  are reported as a `LINT` tier below `CHANGES` — never as a blocker. See Configuration.
 - Tests, builds, type-checks, and emulators are **never** run locally — no `ember test`,
   `ember-tsc`, `pnpm build`, `firebase emulators:*`.
 - Tests are written, not run. To verify them: push a branch, open a PR, and read CI with
   `gh pr checks` / `gh run view`.
+
+## Documentation Sources (MCP)
+
+The plugin bundles two read-only documentation servers, used **only by `code-reviewer`**
+during review. Writer agents do not get them — a stale doc answer costs a review comment,
+not generated code.
+
+| Server | Transport | Auth |
+|--------|-----------|------|
+| `context7` | Hosted HTTP (`mcp.context7.com`) | None. Set `CONTEXT7_API_KEY` for higher rate limits |
+| `ember` | stdio (`npx -y ember-mcp`) | None |
+
+Both are **optional**: if a server is unreachable the review completes using the plugin's
+own skills and says so on its status line. Nothing prompts, blocks, or retries.
+
+**A3 is not on latest.** Ember MCP answers for the current Ember release (7.x) while A3
+runs 6.9, so `code-reviewer` is required to pin every lookup to the version in A3's
+`package.json`, and the codebase outranks upstream "best practice" on any style question.
+This guard is the point of the integration — without it, live docs make review worse.
+
+The plugin never stores a secret. `CONTEXT7_API_KEY` is read from the environment via
+`${CONTEXT7_API_KEY:-}` interpolation in `.mcp.json`:
+
+```bash
+# Windows
+setx CONTEXT7_API_KEY "ctx7sk-..."
+# macOS / Linux
+export CONTEXT7_API_KEY="ctx7sk-..."
+```
 
 ## Skills (Deep Knowledge)
 

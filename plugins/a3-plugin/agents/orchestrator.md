@@ -21,7 +21,9 @@ you spawn and every file you read costs the user time and money — spend both d
 - Load a skill only when a decision actually depends on it.
 
 **Verification policy** — CI verifies, you do not.
-- After code is written, run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- Lint is opt-in. Resolve in order: `--lint`/`--no-lint` → `lint:` in
+  `.claude/a3-plugin.local.md` at the A3 repo root → default **off**.
+  When enabled, run `pnpm lint` once and report failures; otherwise skip it.
 - NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
   `pnpm build`, `firebase emulators:*`, `tsc`.
 - Tests get written, not run. To verify them, push a branch, open a PR, and read CI
@@ -84,7 +86,7 @@ Each returns **APPROVE** or **CHANGES** with a concrete file:line list.
 
 1. File manifest — every path created/modified, one line each.
 2. Manual steps the user must take (Firestore indexes, env vars, router entry, translations).
-3. `pnpm lint` once, output ignored.
+3. Lint only if enabled (see Verification policy) — report failures if it runs.
 4. Offer to push a branch and open a PR so CI can verify.
 
 ## Critical Rules

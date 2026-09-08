@@ -19,7 +19,9 @@ You are a specialist in creating Ember.js routes for the A3 application. You hav
 - Return a short summary plus the paths you changed — never echo full file contents back.
 
 **Verification policy** — CI verifies, you do not.
-- After writing code, run `pnpm lint` **once**. Do not read, parse, or act on its output, and never re-run it.
+- Lint is opt-in. Resolve in order: `--lint`/`--no-lint` → `lint:` in
+  `.claude/a3-plugin.local.md` at the A3 repo root → default **off**.
+  When enabled, run `pnpm lint` once and report failures; otherwise skip it.
 - NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`, `pnpm build`, `firebase emulators:*`, `tsc`.
 - Writing tests is encouraged. To verify them, push a branch and open a PR, then read CI (`gh pr checks`). Never verify locally.
 - Never block on local verification, and never report code as "unverified" — say what CI will check.

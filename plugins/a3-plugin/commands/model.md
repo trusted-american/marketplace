@@ -45,7 +45,9 @@ If the model needs Firestore rules, Cloud Function triggers, or new routes, sugg
 
 ## Verification Policy
 
-- After writing code, run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- Lint is opt-in. Resolve in order: `--lint`/`--no-lint` → `lint:` in
+  `.claude/a3-plugin.local.md` at the A3 repo root → default **off**.
+  When enabled, run `pnpm lint` once and report failures; otherwise skip it.
 - NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
   `pnpm build`, `firebase emulators:*`, `tsc`.
 - Tests are written, not run. To verify them, push a branch, open a PR, and read CI
