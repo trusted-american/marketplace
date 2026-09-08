@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://mcp.context7.com/mcp?client=claude-code-plugin",
       "headers": {
-        "Authorization": "${CONTEXT7_API_KEY:-}"
+        "Authorization": "${user_config.context7_api_key}"
       }
     },
     "ember": {
