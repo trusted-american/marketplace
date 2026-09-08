@@ -9,7 +9,8 @@ targeted multi-agent review pass.
 - Authenticated GitHub access to `trusted-american/a3` (private repo)
 - Run `gh auth login` if not already authenticated
 - A3 workspace available locally
-- Optional: `CONTEXT7_API_KEY` for higher Context7 rate limits (see Documentation Sources)
+- `CONTEXT7_API_KEY` set in the environment — **required** for the bundled Context7 server
+  (see Documentation Sources). Without it, Ember MCP still works and review degrades cleanly.
 
 ## Configuration
 
@@ -108,11 +109,18 @@ not generated code.
 
 | Server | Transport | Auth |
 |--------|-----------|------|
-| `context7` | Hosted HTTP (`mcp.context7.com`) | None. Set `CONTEXT7_API_KEY` for higher rate limits |
+| `context7` | Hosted HTTP (`mcp.context7.com`) | **Required** — `CONTEXT7_API_KEY` |
 | `ember` | stdio (`npx -y ember-mcp`) | None |
 
-Both are **optional**: if a server is unreachable the review completes using the plugin's
-own skills and says so on its status line. Nothing prompts, blocks, or retries.
+**Context7 is not anonymous.** Its hosted MCP endpoint rejects unauthenticated requests
+with `-32001 Authentication required`, and because `.mcp.json` sets an `Authorization`
+header, OAuth fallback is disabled — an unset `CONTEXT7_API_KEY` sends an empty header and
+fails with HTTP 401. Get a key at https://context7.com and export it (below).
+
+Both servers are nonetheless **optional to the review**: if either is unreachable the review
+completes using the plugin's own skills and says so on its status line. Nothing prompts,
+blocks, or retries. A developer without a Context7 key gets Ember MCP plus skills, and will
+see `context7` listed as failed in `/mcp` — expected, not a misconfiguration.
 
 **A3 is not on latest.** Ember MCP answers for the current Ember release (7.x) while A3
 runs 6.9, so `code-reviewer` is required to pin every lookup to the version in A3's
@@ -120,7 +128,8 @@ runs 6.9, so `code-reviewer` is required to pin every lookup to the version in A
 This guard is the point of the integration — without it, live docs make review worse.
 
 The plugin never stores a secret. `CONTEXT7_API_KEY` is read from the environment via
-`${CONTEXT7_API_KEY:-}` interpolation in `.mcp.json`:
+`${CONTEXT7_API_KEY:-}` interpolation in `.mcp.json` — set it to the **raw key**, with no
+`Bearer ` prefix:
 
 ```bash
 # Windows
