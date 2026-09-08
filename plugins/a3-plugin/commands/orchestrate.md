@@ -75,7 +75,9 @@ Verdicts are **APPROVE** or **CHANGES** (file:line + concrete fix).
 
 ## Step 5: Verification & Delivery
 
-- Run `pnpm lint` **once**. Do not read, parse, or act on its output.
+- Lint is opt-in. Resolve in order: `--lint`/`--no-lint` → `lint:` in
+  `.claude/a3-plugin.local.md` at the A3 repo root → default **off**.
+  When enabled, run `pnpm lint` once and report failures; otherwise skip it.
 - NEVER run tests, builds, type-checks, or emulators locally — no `ember test`, `ember-tsc`,
   `pnpm build`, `firebase emulators:*`, `tsc`.
 - Tests are written, not run. To verify: push a branch, open a PR, read CI
