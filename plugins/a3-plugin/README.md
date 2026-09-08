@@ -9,8 +9,8 @@ targeted multi-agent review pass.
 - Authenticated GitHub access to `trusted-american/a3` (private repo)
 - Run `gh auth login` if not already authenticated
 - A3 workspace available locally
-- `CONTEXT7_API_KEY` set in the environment — **required** for the bundled Context7 server
-  (see Documentation Sources). Without it, Ember MCP still works and review degrades cleanly.
+- A Context7 API key — Claude Code prompts for it when the plugin is enabled. Free keys at
+  https://context7.com. Skippable: without it Ember MCP and the plugin's skills still work.
 
 ## Configuration
 
@@ -109,13 +109,13 @@ not generated code.
 
 | Server | Transport | Auth |
 |--------|-----------|------|
-| `context7` | Hosted HTTP (`mcp.context7.com`) | **Required** — `CONTEXT7_API_KEY` |
+| `context7` | Hosted HTTP (`mcp.context7.com`) | API key — prompted on enable |
 | `ember` | stdio (`npx -y ember-mcp`) | None |
 
 **Context7 is not anonymous.** Its hosted MCP endpoint rejects unauthenticated requests
 with `-32001 Authentication required`, and because `.mcp.json` sets an `Authorization`
-header, OAuth fallback is disabled — an unset `CONTEXT7_API_KEY` sends an empty header and
-fails with HTTP 401. Get a key at https://context7.com and export it (below).
+header, OAuth fallback is disabled — no key means an empty header and HTTP 401, not
+anonymous access.
 
 Both servers are nonetheless **optional to the review**: if either is unreachable the review
 completes using the plugin's own skills and says so on its status line. Nothing prompts,
@@ -127,16 +127,26 @@ runs 6.9, so `code-reviewer` is required to pin every lookup to the version in A
 `package.json`, and the codebase outranks upstream "best practice" on any style question.
 This guard is the point of the integration — without it, live docs make review worse.
 
-The plugin never stores a secret. `CONTEXT7_API_KEY` is read from the environment via
-`${CONTEXT7_API_KEY:-}` interpolation in `.mcp.json` — set it to the **raw key**, with no
-`Bearer ` prefix:
+### Supplying the Context7 key
 
-```bash
-# Windows
-setx CONTEXT7_API_KEY "ctx7sk-..."
-# macOS / Linux
-export CONTEXT7_API_KEY="ctx7sk-..."
+There is nothing to configure by hand and no environment variable to set. The key is
+declared as a plugin `userConfig` option, so **Claude Code prompts for it in a masked
+dialog when the plugin is enabled**, once per developer:
+
+```json
+"userConfig": {
+  "context7_api_key": { "type": "string", "sensitive": true, ... }
+}
 ```
+
+`sensitive: true` keeps the value out of `settings.json` and out of the repo — it goes to
+the OS keychain on macOS, or `~/.claude/.credentials.json` elsewhere — and `.mcp.json`
+references it as `${user_config.context7_api_key}`. **Never paste an API key into a Claude
+Code conversation**; anything typed in a chat turn is written to the session transcript,
+which the config dialog is not.
+
+Paste the **raw key**, with no `Bearer ` prefix. To change or remove it later, reconfigure
+the plugin from `/plugin`.
 
 ## Skills (Deep Knowledge)
 

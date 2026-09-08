@@ -1,6 +1,6 @@
 {
   "name": "a3-plugin",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Fullstack development agent for the A3 platform — orchestrates Ember.js, Firebase/Firestore, and GCP Cloud Functions with deep codebase knowledge, context-budgeted delegation, targeted review, and CI-based verification",
   "author": {
     "name": "Trusted American Insurance Agency"
@@ -25,5 +25,13 @@
     "mcp",
     "context7",
     "code-review"
-  ]
+  ],
+  "userConfig": {
+    "context7_api_key": {
+      "type": "string",
+      "title": "Context7 API key",
+      "description": "Required for the bundled Context7 documentation server. Get one at https://context7.com — paste the raw key (no \"Bearer \" prefix). Leave blank to skip Context7: Ember MCP and the plugin’s own skills still work, and review degrades cleanly.",
+      "sensitive": true
+    }
+  }
 }
