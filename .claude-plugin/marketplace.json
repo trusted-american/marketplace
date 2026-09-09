@@ -6,14 +6,14 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-09-08T22:09:53.132Z"
+    "lastUpdated": "2026-09-09T20:32:24.933Z"
   },
   "plugins": [
     {
       "name": "a3-plugin",
       "source": "./plugins/a3-plugin",
       "description": "Fullstack development agent for the A3 platform — orchestrates Ember.js, Firebase/Firestore, and GCP Cloud Functions with deep codebase knowledge, context-budgeted delegation, targeted review, and CI-based verification",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "author": {
         "name": "Trusted American Insurance Agency"
       },
