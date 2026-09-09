@@ -3,7 +3,7 @@ name: code-reviewer
 description: Final quality gate for A3 code — conventions, security, performance, TypeScript strictness. Holds veto power in review.
 model: inherit
 color: red
-tools: [Read, Write, Edit, Grep, Glob, Bash, mcp__plugin_a3-plugin_context7__resolve-library-id, mcp__plugin_a3-plugin_context7__query-docs, mcp__plugin_a3-plugin_ember__search_ember_docs, mcp__plugin_a3-plugin_ember__get_api_reference, mcp__plugin_a3-plugin_ember__get_best_practices]
+tools: [Read, Write, Edit, Grep, Glob, Bash, mcp__plugin_a3-plugin_context7__resolve-library-id, mcp__plugin_a3-plugin_context7__query-docs, mcp__plugin_a3-plugin_ember__search_ember_docs, mcp__plugin_a3-plugin_ember__get_api_reference, mcp__plugin_a3-plugin_ember__get_best_practices, mcp__ember__search_ember_docs, mcp__ember__get_api_reference, mcp__ember__get_best_practices]
 ---
 
 # A3 Code Reviewer Agent
@@ -33,11 +33,21 @@ questions the diff cannot answer** — nothing else.
 
 | Tool | Use for |
 |------|---------|
-| `mcp__plugin_a3-plugin_ember__get_api_reference` | Exact signature of an Ember class, module, or method |
-| `mcp__plugin_a3-plugin_ember__search_ember_docs` | Ember guide/API question you cannot settle from the diff |
-| `mcp__plugin_a3-plugin_ember__get_best_practices` | Pattern guidance — advisory only, see below |
+| `…ember__get_api_reference` | Exact signature of an Ember class, module, or method |
+| `…ember__search_ember_docs` | Ember guide/API question you cannot settle from the diff |
+| `…ember__get_best_practices` | Pattern guidance — advisory only, see below |
 | `mcp__plugin_a3-plugin_context7__resolve-library-id` | Resolve a third-party library ID before querying |
 | `mcp__plugin_a3-plugin_context7__query-docs` | Version-pinned docs for a third-party library |
+
+**The Ember tools appear under one of two prefixes** — use whichever exists:
+
+- `mcp__plugin_a3-plugin_ember__*` — the server this plugin bundles.
+- `mcp__ember__*` — a developer's own `ember` server. When someone already runs the
+  identical `npx -y ember-mcp`, Claude Code collapses the two into that one connection and
+  the plugin-scoped names never appear.
+
+Both are whitelisted. Try the plugin-scoped names first; if they are absent, use the bare
+ones. Only one set will exist in a given session — that is expected, not a fault.
 
 ### Pin every query to A3's version — mandatory
 

@@ -112,6 +112,12 @@ not generated code.
 | `context7` | Hosted HTTP (`mcp.context7.com`) | API key — prompted on enable |
 | `ember` | stdio (`npx -y ember-mcp`) | None |
 
+**If you already run your own `ember` MCP server**, Claude Code collapses it and the
+plugin's identical one into a single connection, so `a3-plugin:ember` will not appear in
+`/mcp` — your own entry is serving both. `code-reviewer` whitelists the bare
+`mcp__ember__*` names alongside the plugin-scoped ones so it works either way. Context7 is
+unaffected: the plugin's HTTP server differs from a personal stdio one, so both coexist.
+
 **Context7 is not anonymous.** Its hosted MCP endpoint rejects unauthenticated requests
 with `-32001 Authentication required`, and because `.mcp.json` sets an `Authorization`
 header, OAuth fallback is disabled — no key means an empty header and HTTP 401, not
