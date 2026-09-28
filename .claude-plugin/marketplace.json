@@ -6,7 +6,7 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-09-09T20:32:24.933Z"
+    "lastUpdated": "2026-09-28T06:34:35.011Z"
   },
   "plugins": [
     {
@@ -303,35 +303,41 @@
       "repository": "https://github.com/markus41/claude"
     },
     {
-      "name": "deployment-pipeline",
+      "name": "delivery-orchestrator",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/markus41/claude",
-        "path": "plugins/deployment-pipeline"
+        "path": "plugins/delivery-orchestrator"
       },
-      "description": "Harness CD integration pipeline with state-machine workflow orchestration",
-      "version": "2.0.0",
+      "description": "Unified delivery orchestration: one plugin replacing six. A tested, dependency-free kernel (swarm conductor with leased claims and worktree isolation, guardrails, transactional state MCP, fleet protocol) behind platform adapters for Linear, Jira, GitHub and Harness. 133 commands, 156 agents, 52 skills, 12 schema-validated workflows, 155 tests.",
+      "version": "1.0.0",
       "author": {
         "name": "Markus Ahling"
       },
       "license": "MIT",
       "keywords": [
-        "workflow",
-        "automation",
-        "state-machine",
         "orchestration",
+        "delivery",
+        "linear",
+        "jira",
+        "github",
         "harness",
+        "swarm",
+        "conductor",
+        "agents",
+        "agent-sessions",
+        "pull-requests",
         "ci-cd",
-        "deployment",
-        "pipeline",
-        "agentic-patterns",
-        "prompt-chaining",
-        "hitl",
+        "release",
+        "triage",
+        "sprint",
         "guardrails",
-        "multi-agent",
-        "exception-handling"
+        "two-way-sync",
+        "mcp",
+        "workflows",
+        "dora"
       ],
-      "repository": "https://github.com/markus41/deployment-pipeline"
+      "repository": "https://github.com/markus41/claude"
     },
     {
       "name": "dotnet-blazor",
@@ -576,60 +582,6 @@
       "repository": "https://github.com/Lobbi-Docs/claude"
     },
     {
-      "name": "github-orchestrator",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/markus41/claude",
-        "path": "plugins/github-orchestrator"
-      },
-      "description": "Autonomous GitHub delivery orchestration: 34 agents in 7 teams, 24 commands, 16 skills, and 7 schema-validated declarative workflows. Drives PRs from branch to merged — adversarial review boards, CI drive-to-green loops, stacked-PR merge trains, conflict prediction, supply-chain triage, release trains, and DORA/hotspot repo intelligence over the GitHub MCP.",
-      "version": "1.1.0",
-      "author": {
-        "name": "Markus Ahling"
-      },
-      "license": "MIT",
-      "keywords": [
-        "github",
-        "orchestration",
-        "pull-request",
-        "code-review",
-        "ci-cd",
-        "github-actions",
-        "merge-queue",
-        "stacked-prs",
-        "merge-train",
-        "drive-to-green",
-        "flaky-tests",
-        "dora",
-        "supply-chain",
-        "codeql",
-        "dependabot",
-        "release-engineering",
-        "semver",
-        "changelog",
-        "codeowners",
-        "advisor",
-        "multi-agent",
-        "adversarial-review",
-        "blackboard",
-        "workflow",
-        "telemetry",
-        "mcp",
-        "automation",
-        "agents",
-        "projects",
-        "issue-types",
-        "sub-issues",
-        "issue-forms",
-        "copilot",
-        "agentic-workflows",
-        "github-app",
-        "oidc",
-        "authentication"
-      ],
-      "repository": "https://github.com/TheLobbi/claude"
-    },
-    {
       "name": "home-assistant-architect",
       "source": {
         "source": "git-subdir",
@@ -663,93 +615,6 @@
         "learning"
       ],
       "repository": "https://github.com/Lobbi-Docs/claude.git"
-    },
-    {
-      "name": "jira-orchestrator",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/markus41/claude",
-        "path": "plugins/jira-orchestrator"
-      },
-      "description": "Enterprise Jira orchestration with 82 agents, 16 teams, 48 commands, 14 skills, 5 schema-validated workflows, and a read-only advisor. Features Atlassian MCP OAuth, Harness integration, Neon PostgreSQL, Redis caching, Temporal workflows, declarative workflow definitions, lifecycle telemetry hooks, and structured reasoning frameworks.",
-      "version": "8.3.0",
-      "author": {
-        "name": "Markus Ahling"
-      },
-      "license": "MIT",
-      "keywords": [
-        "jira",
-        "orchestration",
-        "atlassian",
-        "harness",
-        "ci-cd",
-        "workflow",
-        "advisor",
-        "automation",
-        "agents",
-        "clean-architecture",
-        "solid",
-        "mcp",
-        "knowledge-graph",
-        "sequential-thinking",
-        "neon",
-        "postgresql",
-        "redis",
-        "temporal",
-        "agentic-design-patterns",
-        "routing",
-        "planning",
-        "multi-agent",
-        "memory-management",
-        "reflection",
-        "parallelization",
-        "exception-handling",
-        "human-in-the-loop",
-        "evaluation-monitoring",
-        "prioritization",
-        "goal-setting"
-      ],
-      "repository": "https://github.com/Lobbi-Docs/claude"
-    },
-    {
-      "name": "linear-orchestrator",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/markus41/claude",
-        "path": "plugins/linear-orchestrator"
-      },
-      "description": "Advanced Linear integration with two-way sync to Harness Code and Microsoft Planner. Covers Linear GraphQL API, OAuth 2.0, webhooks, attachments, agents (AIG), MCP, cycles, projects, initiatives, customer requests, SLA, triage, templates, sub-issues, and diffs. 22 commands, 10 skills, 12 agents.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Markus Ahling"
-      },
-      "license": "MIT",
-      "keywords": [
-        "linear",
-        "linear-app",
-        "graphql",
-        "oauth",
-        "webhooks",
-        "agents",
-        "aig",
-        "harness",
-        "harness-code",
-        "microsoft-planner",
-        "ms-graph",
-        "two-way-sync",
-        "mcp",
-        "cycles",
-        "projects",
-        "initiatives",
-        "customer-requests",
-        "sla",
-        "triage",
-        "issue-tracking",
-        "orchestration",
-        "automation",
-        "agent-signals"
-      ],
-      "repository": "https://github.com/markus41/claude"
     },
     {
       "name": "lobbi-bi-reports",
@@ -1204,30 +1069,6 @@
         "aspnet-core",
         "dashboard-widgets",
         "creative-ui"
-      ],
-      "repository": "https://github.com/markus41/claude"
-    },
-    {
-      "name": "project-management-plugin",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/markus41/claude",
-        "path": "plugins/project-management-plugin"
-      },
-      "description": "Universal project manager with keep-Claude-on-task guardrails: focus anchor, scope lock, done-when contract, over-engineering detector, drift auditor, turn budget, user-prompt archive, and compaction-safe handoff. Plus interview-first init, micro-task decomposition, deep research, transactional state MCP, and 9 PM platform integrations.",
-      "version": "1.4.0",
-      "author": {
-        "name": "Markus Ahling"
-      },
-      "license": "MIT",
-      "keywords": [
-        "project-management",
-        "task-decomposition",
-        "research-first",
-        "micro-tasks",
-        "autonomous",
-        "pm-integration",
-        "mcp"
       ],
       "repository": "https://github.com/markus41/claude"
     },
