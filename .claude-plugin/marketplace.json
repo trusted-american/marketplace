@@ -6,7 +6,7 @@
   "metadata": {
     "description": "Plugin registry for Claude Code",
     "version": "1.0.0",
-    "lastUpdated": "2026-10-19T06:31:19.740Z"
+    "lastUpdated": "2026-10-26T06:31:27.811Z"
   },
   "plugins": [
     {
@@ -515,8 +515,8 @@
         "url": "https://github.com/markus41/claude",
         "path": "plugins/frontend-design-system"
       },
-      "description": "263+ design styles with multi-tenant Keycloak theming for AI-powered frontend development",
-      "version": "2.0.0",
+      "description": "Design styles with multi-tenant Keycloak theming and Chakra UI v3 output for AI-powered frontend development; ships a design-styles MCP server",
+      "version": "2.1.0",
       "author": {
         "name": "Markus Ahling"
       },
@@ -539,9 +539,13 @@
         "tool-use",
         "memory",
         "parallelization",
-        "guardrails"
+        "guardrails",
+        "chakra-ui",
+        "chakra-ui-v3",
+        "design-tokens",
+        "mcp"
       ],
-      "repository": "https://github.com/markus41/claude/tree/main/frontend-design-system"
+      "repository": "https://github.com/markus41/claude/tree/main/plugins/frontend-design-system"
     },
     {
       "name": "fullstack-iac",

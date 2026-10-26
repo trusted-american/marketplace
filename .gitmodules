@@ -18,4 +18,4 @@
 [submodule "community/claude"]
 	path = community/claude
 	url = https://github.com/markus41/claude
-	rev = fee8426275f05ae4f107863550140044649cf02e
+	rev = 4e6f280df2e29ed0df1b326e3b651711de6068f3
